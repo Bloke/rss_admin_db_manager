@@ -17,7 +17,7 @@ $plugin['name'] = 'rss_admin_db_manager';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '4.5';
+$plugin['version'] = '4.5.1';
 $plugin['author'] = 'Rob Sable';
 $plugin['author_uri'] = 'http://www.wilshireone.com/';
 $plugin['description'] = 'Database management system.';
@@ -330,7 +330,7 @@ function rss_db_bk($event, $step)
         ) .
         endTable() .
         tag_start('div', array('class' => 'txp-listtables')) .
-        startTable("txp-list") .
+        startTable("txp-list", '', 'txp-list') .
         tr(
             tda(hed('Create a new backup of the ' . $DB->db . ' database' .
                 br .
@@ -373,12 +373,11 @@ function rss_db_bk($event, $step)
 
             foreach ($database_files as $stamp => $filename) {
                 $no++;
-                $style = ($no % 2 == 0) ? ' style="background-color: #eee;"' : '';
                 $database_text = substr($filename, 0, 50);
                 $date_text = strftime("%A, %B %d, %Y [%H:%M:%S]", $stamp);
                 $size_text = filesize($bkpath . '/' . $filename);
                 $totalsize+= $size_text;
-                echo tr(td($no) . td($database_text) . td($date_text) . td(prettyFileSize($size_text)) . '<td><a href="index.php?event=rss_db_bk&amp;download=' . $filename . '">Download</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;restore=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Restore</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;delete=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Delete</a></td>', $style);
+                echo tr(td($no) . td($database_text) . td($date_text) . td(prettyFileSize($size_text)) . '<td><a href="index.php?event=rss_db_bk&amp;download=' . $filename . '">Download</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;restore=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Restore</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;delete=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Delete</a></td>');
             }
 
             echo tr(tag($no . " Backup File(s)", "th", ' colspan="3"') . tag(prettyFileSize($totalsize) , "th", ' colspan="4"'));
@@ -433,7 +432,7 @@ function rss_db_man($event, $step)
         endTable() .
         br;
 
-    echo startTable('list') .
+    echo startTable('list', '', 'txp-list') .
         tr(
             hcell("No.") .
             hcell("Tables") .
@@ -465,16 +464,15 @@ function rss_db_man($event, $step)
             $alltabs[] = $Name;
             $color = ($mysqlErrno != 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
             $color2 = ($Data_free > 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
-            $style = ($no % 2 == 0) ? ' style="background-color: #eee;"' : '';
             $no++;
             $row_usage+= $Rows;
             $data_usage+= $Data_length;
             $index_usage+= $Index_length;
             $overhead_usage+= $Data_free;
-            echo tr(td($no) . td(href($Name, "index.php?event=rss_sql_run&amp;tn=" . $Name)) . td(" " . $Rows) . td(prettyFileSize($Data_length)) . td(prettyFileSize($Index_length)) . td(prettyFileSize($Data_length + $Index_length)) . tda(prettyFileSize($Data_free) , $color2) . tda(" " . $mysqlErrno, $color) . td(href("Repair", "index.php?event=rss_db_man&amp;rep_table=" . $Name)) . td(href("Backup", "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $Name) . '<td><a href="index.php?event=rss_db_man&amp;drop_table=' . $Name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Drop</a></td>') , $style);
+            echo tr(td($no) . td(href($Name, "index.php?event=rss_sql_run&amp;tn=" . $Name)) . td(" " . $Rows) . td(prettyFileSize($Data_length)) . td(prettyFileSize($Index_length)) . td(prettyFileSize($Data_length + $Index_length)) . tda(prettyFileSize($Data_free) , $color2) . tda(" " . $mysqlErrno, $color) . td(href("Repair", "index.php?event=rss_db_man&amp;rep_table=" . $Name)) . td(href("Backup", "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $Name) . '<td><a href="index.php?event=rss_db_man&amp;drop_table=' . $Name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Drop</a></td>'));
         }
 
-        echo tr(hcell("Total") . hcell($no . " Tables") . hcell(number_format($row_usage)) . hcell(prettyFileSize($data_usage)) . hcell(prettyFileSize($index_usage)) . hcell(prettyFileSize($data_usage + $index_usage)) . hcell(prettyFileSize($overhead_usage)) . hcell() . tda(href(strong("Repair All") , "index.php?event=rss_db_man&amp;rep_all=" . implode(",", $alltabs)) , ' style="text-align:center;" colspan="3"') , $style);
+        echo tr(hcell("Total") . hcell($no . " Tables") . hcell(number_format($row_usage)) . hcell(prettyFileSize($data_usage)) . hcell(prettyFileSize($index_usage)) . hcell(prettyFileSize($data_usage + $index_usage)) . hcell(prettyFileSize($overhead_usage)) . hcell() . tda(href(strong("Repair All") , "index.php?event=rss_db_man&amp;rep_all=" . implode(",", $alltabs)) , ' style="text-align:center;" colspan="3"'));
     } else {
         echo tr(tda("Could Not Show Table Status Because Your MYSQL Version Is Lower Than 3.23.", ' style="text-align:center;" colspan=14"'));
     }
@@ -544,7 +542,7 @@ function rss_sql_run($event, $step)
                             $i++;
                         }
 
-                        $rsd[] = '<div class="scrollWrapper">' . startTable('list', '', 'scrollable') . '<thead>' . tr($headers) . '</thead><tbody>';
+                        $rsd[] = '<div class="scrollWrapper">' . startTable('list', '', 'txp-list scrollable') . '<thead>' . tr($headers) . '</thead><tbody>';
 
                         while ($a = mysqli_fetch_assoc($run_query)) {
                             $out[] = $a;
