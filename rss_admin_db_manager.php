@@ -17,9 +17,9 @@ $plugin['name'] = 'rss_admin_db_manager';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '4.5.1';
-$plugin['author'] = 'Rob Sable';
-$plugin['author_uri'] = 'http://www.wilshireone.com/';
+$plugin['version'] = '4.6.0';
+$plugin['author'] = 'Rob Sable / Stef Dawson';
+$plugin['author_uri'] = 'https://stefdawson.com/';
 $plugin['description'] = 'Database management system.';
 
 // Plugin load order:
@@ -45,7 +45,7 @@ $plugin['type'] = '3';
 if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
 if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
 
-$plugin['flags'] = '0';
+$plugin['flags'] = '2';
 
 // Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
 // Syntax:
@@ -53,309 +53,363 @@ $plugin['flags'] = '0';
 // #@event
 // #@language ISO-LANGUAGE-CODE
 // abc_string_name => Localized String
-
-/** Uncomment me, if you need a textpack
 $plugin['textpack'] = <<< EOT
-#@admin
-#@language en-gb
-abc_sample_string => Sample String
-abc_one_more => One more
-#@language de-de
-abc_sample_string => Beispieltext
-abc_one_more => Noch einer
+#@owner rss_admin_db_manager
+#@language en, en-gb, en-us
+#@admin-side
+rss_db_bk => Database backup
+rss_db_man => Database manager
+rss_db_run => Run SQL
+#@rss_sql_run
+#@rss_db_man
+#@rss_db_bk
+rss_db_backup_count => Backup file(s): {count}
+rss_db_backup_create => Create a new backup of the {db} database
+rss_db_backup_date => Backup date/time
+rss_db_backup_error => Backup failed. Error: {error}
+rss_db_backup_failed => Backup failed: folder is not writable
+rss_db_backup_name => Backup file name
+rss_db_backup_none => No database backups
+rss_db_backup_number => No.
+rss_db_backup_ok => Backed up: {db} to "{filename}"
+rss_db_backup_path => Backup Path:
+rss_db_backup_previous => Previous backup files
+rss_db_backup_restore => Restore
+rss_db_backup_size => Backup file size
+rss_db_debug_mode => Debug Mode:
+rss_db_delete_error => Unable to delete: "{filename}"
+rss_db_delete_ok => Deleted: "{filename}"
+rss_db_gzip_file => gzipped file
+rss_db_include_log => Include txp_log:
+rss_db_lock_tables => Lock tables:
+rss_db_mysql_path => mysql path:
+rss_db_mysqldump_path => mysqldump path:
+rss_db_restore_error => Failed to restore. Error: {error}
+rss_db_restore_ok => Restored: "{filename}" to {db}
+rss_db_sql_file => .sql file
 EOT;
-**/
 // End of textpack
 
 if (!defined('txpinterface'))
         @include_once('zem_tpl.php');
 
 # --- BEGIN PLUGIN CODE ---
-// This is a PLUGIN TEMPLATE for Textpattern CMS.
-
-// Copy this file to a new name like abc_myplugin.php. Edit the code, then
-// run this file at the command line to produce a plugin for distribution:
-// $ php abc_myplugin.php > abc_myplugin-0.1.txt
-
-// Plugin name is optional. If unset, it will be extracted from the current
-// file name. Plugin names should start with a three letter prefix which is
-// unique and reserved for each plugin author ("abc" is just an example).
-// Uncomment and edit this line to override:
-$plugin['name'] = 'rss_admin_db_manager';
-
-// Allow raw HTML help, as opposed to Textile.
-// 0 = Plugin help is in Textile format, no raw HTML allowed (default).
-// 1 = Plugin help is in raw HTML. Not recommended.
-# $plugin['allow_html_help'] = 1;
-
-$plugin['version'] = '4.5';
-$plugin['author'] = 'Rob Sable';
-$plugin['author_uri'] = 'http://www.wilshireone.com/';
-$plugin['description'] = 'Database management system.';
-
-// Plugin load order:
-// The default value of 5 would fit most plugins, while for instance comment
-// spam evaluators or URL redirectors would probably want to run earlier
-// (1...4) to prepare the environment for everything else that follows.
-// Values 6...9 should be considered for plugins which would work late.
-// This order is user-overrideable.
-$plugin['order'] = '5';
-
-// Plugin 'type' defines where the plugin is loaded
-// 0 = public              : only on the public side of the website (default)
-// 1 = public+admin        : on both the public and admin side
-// 2 = library             : only when include_plugin() or require_plugin() is called
-// 3 = admin               : only on the admin side (no AJAX)
-// 4 = admin+ajax          : only on the admin side (AJAX supported)
-// 5 = public+admin+ajax   : on both the public and admin side (AJAX supported)
-$plugin['type'] = '3';
-
-// Plugin "flags" signal the presence of optional capabilities to the core plugin loader.
-// Use an appropriately OR-ed combination of these flags.
-// The four high-order bits 0xf000 are available for this plugin's private use
-if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
-if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
-
-$plugin['flags'] = '0';
-
-// Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
-// Syntax:
-// ## arbitrary comment
-// #@event
-// #@language ISO-LANGUAGE-CODE
-// abc_string_name => Localized String
-
-/** Uncomment me, if you need a textpack
-$plugin['textpack'] = <<< EOT
-#@admin
-#@language en-gb
-abc_sample_string => Sample String
-abc_one_more => One more
-#@language de-de
-abc_sample_string => Beispieltext
-abc_one_more => Noch einer
-EOT;
-**/
-// End of textpack
-
-if (!defined('txpinterface')) @include_once ('zem_tpl.php');
-
-// --- BEGIN PLUGIN CODE ---
-
 if (txpinterface === 'admin') {
-    add_privs('rss_db_man', '1');
-    register_tab("extensions", "rss_db_man", "DB Manager");
-    register_callback("rss_db_man", "rss_db_man");
-    add_privs('rss_sql_run', '1');
-    register_tab("extensions", "rss_sql_run", "Run SQL");
-    register_callback("rss_sql_run", "rss_sql_run");
-    add_privs('rss_db_bk', '1');
-    register_tab("extensions", "rss_db_bk", "DB Backup");
-    register_callback("rss_db_bk", "rss_db_bk");
+    new rss_admin_db_manager();
 }
 
-function rss_db_bk($event, $step)
+/**
+ * Admin-side class.
+ */
+class rss_admin_db_manager
 {
-    global $prefs, $rss_dbbk_path, $rss_dbbk_dump, $rss_dbbk_mysql, $rss_dbbk_lock, $rss_dbbk_txplog, $rss_dbbk_debug, $DB;
-    if (!isset($rss_dbbk_lock)) {
-        $rss_dbbk_lock = "1";
-        $rs = safe_insert('txp_prefs', "name='rss_dbbk_lock', val='$rss_dbbk_lock'");
-    }
+    /**
+     * The plugin's event.
+     *
+     * @var string
+     */
+    protected $event = __CLASS__;
 
-    if (!isset($rss_dbbk_txplog)) {
-        $rss_dbbk_txplog = "1";
-        $rs = safe_insert('txp_prefs', "name='rss_dbbk_txplog', val='$rss_dbbk_txplog'");
-    }
+    /**
+     * The plugin's privileges.
+     *
+     * @var string
+     */
+    protected $privs = '1';
 
-    if (!isset($rss_dbbk_debug)) {
-        $rss_dbbk_debug = "0";
-        $rs = safe_insert('txp_prefs', "name='rss_dbbk_debug', val='$rss_dbbk_debug'");
-    }
+    /**
+     * Prefs and their defaults
+     *
+     * @var array
+     */
+    protected $prefs = array();
 
-    if (empty($rss_dbbk_path)) {
-        $rss_dbbk_path = get_pref('tempdir', sys_get_temp_dir());
-        $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_path) . "'", "name='rss_dbbk_path'");
-    }
-
-    if (empty($rss_dbbk_dump)) {
-        $rss_dbbk_dump = "mysqldump";
-        $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_dump) . "'", "name='rss_dbbk_dump'");
-    }
-
-    if (empty($rss_dbbk_mysql)) {
-        $rss_dbbk_mysql = "mysql";
-        $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_mysql) . "'", "name='rss_dbbk_mysql'");
-    }
-
-    include (txpath . '/include/txp_prefs.php');
-
-    $bkpath = $rss_dbbk_path;
-    $iswin = preg_match('/Win/', php_uname());
-    $mysql_hup = ' -h' . $DB->host . ' -u' . $DB->user . ' -p' . escapeshellcmd($DB->pass);
-    $txplogps = ps('rss_dbbk_txplog');
-
-    if (ps("save")) {
-        pagetop("DB Manager", "Preferences Saved");
-        safe_update("txp_prefs", "val = '" . addslashes(ps('rss_dbbk_path')) . "'", "name = 'rss_dbbk_path'");
-        safe_update("txp_prefs", "val = '" . addslashes(ps('rss_dbbk_dump')) . "'", "name = 'rss_dbbk_dump'");
-        safe_update("txp_prefs", "val = '" . addslashes(ps('rss_dbbk_mysql')) . "'", "name = 'rss_dbbk_mysql'");
-        safe_update("txp_prefs", "val = '" . ps('rss_dbbk_lock') . "'", "name = 'rss_dbbk_lock'");
-        if (isset($txplogps)) safe_update("txp_prefs", "val = '" . ps('rss_dbbk_txplog') . "'", "name = 'rss_dbbk_txplog'");
-        safe_update("txp_prefs", "val = '" . ps('rss_dbbk_debug') . "'", "name = 'rss_dbbk_debug'");
-        header("Location: index.php?event=rss_db_bk");
-    } elseif (gps("bk")) {
-        $bk_table = (gps("bk_table")) ? " --tables " . gps("bk_table") . " " : "";
-        $tabpath = (gps("bk_table")) ? "-" . gps("bk_table") : "";
-        $gzip = gps("gzip");
-        $filename = time() . '-' . $DB->db . $tabpath;
-        $backup_path = $bkpath . '/' . $filename . '.sql';
-        $lock = ($rss_dbbk_lock) ? "" : " --skip-lock-tables --skip-add-locks ";
-        echo $txplogps;
-        $nolog = ($rss_dbbk_txplog) ? "" : " --ignore-table=" . $DB->db . ".txp_log ";
-        $nolog = (isset($bk_table) && gps("bk_table") == "txp_log") ? "" : $nolog;
-
-        if ($gzip) {
-            $backup_path.= '.gz';
-            $backup_cmd = $rss_dbbk_dump . $mysql_hup . ' -Q --add-drop-table ' . $lock . $nolog . $DB->db . $bk_table . ' | gzip > ' . $backup_path;
-        } else {
-            $backup_cmd = $rss_dbbk_dump . $mysql_hup . ' -Q --add-drop-table ' . $lock . $nolog . $DB->db . $bk_table . ' > ' . $backup_path;
-        }
-
-        $bkdebug = ($rss_dbbk_debug) ? $backup_cmd : '';
-        $error = "";
-
-        if (function_exists('passthru')) {
-            passthru($backup_cmd, $error);
-        } else {
-            $dumpIt = popen($backup_cmd, 'r');
-            pclose($dumpIt);
-        }
-
-        if (!is_writable($bkpath)) {
-            pagetop("DB Manager", "BACKUP FAILED: folder is not writable");
-        } elseif ($error) {
-            unlink($backup_path);
-            pagetop("DB Manager", "BACKUP FAILED.  ERROR NO: " . $error);
-        } elseif (!is_file($backup_path)) {
-            pagetop("DB Manager", "BACKUP FAILED.  ERROR NO: " . $error);
-        } elseif (filesize($backup_path) == 0) {
-            unlink($backup_path);
-            pagetop("DB Manager", "BACKUP FAILED.  ERROR NO: " . $error);
-        } else {
-            pagetop("DB Manager", "Backed Up: " . $DB->db . " to " . $filename);
-        }
-    } elseif (gps("download")) {
-        $fn = gps("download");
-        $file_path = $bkpath . '/' . $fn;
-        header("Pragma: public");
-        header("Expires: 0");
-        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        header("Content-Type: application/force-download");
-        header("Content-Type: application/octet-stream");
-        header("Content-Type: application/download");
-        if (substr($fn, -2) == "gz") header("Content-Type: application/zip");
-        header("Content-Disposition: attachment; filename=" . basename($file_path) . ";");
-        header("Content-Transfer-Encoding: binary");
-        header("Content-Length: " . filesize($file_path));
-        @readfile($file_path);
-    } elseif (gps("restore")) {
-        if (stristr(gps("restore") , '.gz')) {
-            $backup_cmd = 'gunzip < ' . $bkpath . '/' . gps("restore") . ' | ' . $rss_dbbk_mysql . $mysql_hup . ' ' . $DB->db;
-        } else {
-            $backup_cmd = $rss_dbbk_mysql . $mysql_hup . ' ' . $DB->db . ' < ' . $bkpath . '/' . gps("restore");
-        }
-
-        $bkdebug = ($rss_dbbk_debug) ? $backup_cmd : '';
-        $error = "";
-
-        if (function_exists('passthru')) {
-            passthru($backup_cmd, $error);
-        } else {
-            $dumpIt = popen($backup_cmd, 'r');
-            pclose($dumpIt);
-        }
-
-        if ($error) {
-            pagetop("DB Manager", "FAILED TO RESTORE: " . $error);
-        } else {
-            pagetop("DB Manager", "Restored: " . gps("restore") . " to " . $DB->db);
-        }
-    } elseif (gps("delete")) {
-        if (is_file($bkpath . '/' . gps("delete"))) {
-            if (!unlink($bkpath . '/' . gps("delete"))) {
-                pagetop("DB Manager", "Unable to Delete: " . gps("delete"));
-            } else {
-                pagetop("DB Manager", "Deleted: " . gps("delete"));
-            }
-        } else {
-            pagetop("DB Manager", "Unable to Delete: " . gps("delete"));
-        }
-    } else {
-        pagetop("DB Backup");
-    }
-
-    $gzp = (!$iswin) ? " | " . href('gzipped file', "index.php?event=rss_db_bk&amp;bk=$DB->db&amp;gzip=1") : "";
-    $sqlversion = getRow("SELECT VERSION() AS version");
-    $sqlv = explode("-", $sqlversion['version']);
-    $allownologs = ((float)$sqlv[0] >= (float)"4.1.9") ? tda(gTxt('Include txp_log:') , ' style="text-align:right;vertical-align:middle"') . tda(yesnoRadio("rss_dbbk_txplog", $rss_dbbk_txplog) , ' style="text-align:left;vertical-align:middle"') : '';
-
-    if (isset($bkdebug) && $bkdebug) {
-        echo '<p align="center">' . $bkdebug . '</p>';
-    }
-
-    echo startTable('txp-list') .
-        form(
-            tr(
-                tda(gTxt('Lock Tables:'), ' style="text-align:right;vertical-align:middle"') .
-                tda(yesnoRadio("rss_dbbk_lock", $rss_dbbk_lock), ' style="text-align:left;vertical-align:middle"') .
-                $allownologs .
-                tda(gTxt('Debug Mode:'), ' style="text-align:right;vertical-align:middle"') .
-                tda(yesnoRadio("rss_dbbk_debug", $rss_dbbk_debug), ' style="text-align:left;vertical-align:middle"') .
-                tda(fInput("submit", "save", gTxt("save") , "publish") .
-                eInput("rss_db_bk") .
-                sInput('saveprefs'), " colspan=\"2\" class=\"noline\"")
-            ) .
-            tr(
-                tda(gTxt('Backup Path:'), ' style="text-align:right;vertical-align:middle"') .
-                tda(text_input("rss_dbbk_path", $rss_dbbk_path, '50'), ' colspan="15"')
-            ) .
-            tr(
-                tda(gTxt('mysqldump Path:'), ' style="text-align:right;vertical-align:middle"') .
-                tda(text_input("rss_dbbk_dump", $rss_dbbk_dump, '50'), ' colspan="15"')
-            ) .
-            tr(
-                tda(gTxt('mysql Path:'), ' style="text-align:right;vertical-align:middle"') .
-                tda(text_input("rss_dbbk_mysql", $rss_dbbk_mysql, '50'), ' colspan="15"')
-            )
-        ) .
-        endTable() .
-        tag_start('div', array('class' => 'txp-listtables')) .
-        startTable("txp-list", '', 'txp-list') .
-        tr(
-            tda(hed('Create a new backup of the ' . $DB->db . ' database' .
-                br .
-                href('.sql file', "index.php?event=rss_db_bk&amp;bk=$DB->db") . $gzp, 3), ' colspan="7" style="text-align:center;"')
-        ) .
-        tr(
-            tdcs(hed("Previous Backup Files", 1), 7)
-        ) .
-        tr(
-            hcell("No.") .
-            hcell("Backup File Name") .
-            hcell("Backup Date/Time") .
-            hcell("Backup File Size") .
-            hcell("") .
-            hcell("") .
-            hcell("")
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->prefs = array(
+            'rss_dbbk_lock'   => array(
+                'val' => 1,
+                'type' => 'yesnoradio',
+            ),
+            'rss_dbbk_txplog' => array(
+                'val' => 1,
+                'type' => 'yesnoradio',
+            ),
+            'rss_dbbk_debug'  => array(
+                'val' => 0,
+                'type' => 'yesnoradio',
+            ),
+            'rss_dbbk_path'   => array(
+                'val' => get_pref('tempdir', sys_get_temp_dir()),
+                'type' => 'text_input',
+            ),
+            'rss_dbbk_dump'   => array(
+                'val' => 'mysqldump',
+                'type' => 'text_input',
+            ),
+            'rss_dbbk_mysql'  => array(
+                'val' => 'mysql',
+                'type' => 'text_input',
+            ),
         );
 
-    $totalsize = 0;
-    $no = 0;
+        add_privs('rss_db_man', $this->privs);
+        add_privs('rss_sql_run', $this->privs);
+        add_privs('rss_db_bk', $this->privs);
 
-    if (!is_folder_empty($bkpath)) {
-        if (file_exists($bkpath)) {
+        register_callback(array($this, 'welcome'), 'plugin_lifecycle.'.$this->event);
+
+        register_tab("extensions", "rss_db_man", gTxt('rss_db_man'));
+        register_callback(array($this, 'db_man'), "rss_db_man");
+
+        register_tab("extensions", "rss_sql_run", gTxt('rss_db_run'));
+        register_callback(array($this, 'db_sql'), "rss_sql_run");
+
+        register_tab("extensions", "rss_db_bk", gTxt('rss_db_bk'));
+        register_callback(array($this, 'db_bak'), "rss_db_bk");
+    }
+
+    /**
+     * Runs on plugin installation.
+     *
+     * @param      string  $evt    Textpattern event (panel)
+     * @param      string  $stp    Textpattern step (action)
+     */
+    public function welcome($evt, $stp)
+    {
+        switch ($stp) {
+            case 'installed':
+                $this->install();
+                break;
+            case 'deleted':
+                $this->uninstall();
+                break;
+        }
+
+        return;
+    }
+
+    /**
+     * Install prefs.
+     *
+     * @param array $set Array of key => values to forcibly set. Defaults will be used otherwise
+     */
+    public function install($set = array())
+    {
+        foreach ($this->prefs as $key => $options) {
+            if (get_pref($key, null) === null || isset($set[$key])) {
+                if ($options['type'] === 'yesnoradio') {
+                    $newval = isset($set[$key]) ? $set[$key] : $options['val'];
+                } else {
+                    $newval = empty($set[$key]) ? $options['val'] : $set[$key] ;
+                }
+
+                set_pref($key, $newval, $this->event, PREF_HIDDEN, $options['type']);
+            }
+        }
+    }
+
+    /**
+     * Delete prefs and language strings.
+     */
+    public function uninstall()
+    {
+        remove_pref(null, $this->event);
+        safe_delete('txp_lang', "owner = 'rss\_admin\_db\_manager'");
+    }
+
+    /**
+     * Database backup panel
+     *
+     * @param   string  $evt  Textpattern event (panel)
+     * @param   string  $stp  Textpattern step (action)
+     */
+    public function db_bak($event, $step)
+    {
+        global $DB;
+
+        include (txpath . '/include/txp_prefs.php');
+
+        $iswin = preg_match('/Win/', php_uname());
+        $mysql_hup = ' -h' . $DB->host . ' -u' . $DB->user . ' -p' . escapeshellcmd($DB->pass);
+
+        foreach ($this->prefs as $key => $options) {
+            $$key = get_pref($key, $options['val']);
+        }
+
+        if (ps("save")) {
+            foreach ($this->prefs as $key => $options) {
+                $in = ps($key);
+                $this->install(array($key => $in));
+                $$key = get_pref($key, $in, true);
+            }
+
+            // Todo: i18n.
+            pagetop(gTxt('rss_db_bak'), "Preferences saved");
+
+        } elseif (gps("bk")) {
+            $bk_table = (gps("bk_table")) ? " --tables " . gps("bk_table") . " " : "";
+            $tabpath = (gps("bk_table")) ? "-" . gps("bk_table") : "";
+            $gzip = gps("gzip");
+            $filename = time() . '-' . $DB->db . $tabpath;
+            $backup_path = $rss_dbbk_path . '/' . $filename . '.sql';
+            $lock = ($rss_dbbk_lock) ? "" : " --skip-lock-tables --skip-add-locks ";
+//            echo $txplogps;
+            $nolog = ($rss_dbbk_txplog) ? "" : " --ignore-table=" . $DB->db . ".txp_log ";
+            $nolog = (isset($bk_table) && gps("bk_table") == "txp_log") ? "" : $nolog;
+
+            $backup_cmd = $rss_dbbk_dump . $mysql_hup . ' -Q --add-drop-table ' . $lock . $nolog . $DB->db . $bk_table . ($gzip ? ' | gzip' : '') . ' > ' . $backup_path . ($gzip ? '.gz' : '');
+
+            $bkdebug = ($rss_dbbk_debug) ? $backup_cmd : '';
+            $error = "";
+
+            if (function_exists('passthru')) {
+                passthru($backup_cmd, $error);
+            } else {
+                $dumpIt = popen($backup_cmd, 'r');
+                pclose($dumpIt);
+            }
+
+            if (!is_writable($rss_dbbk_path)) {
+                $message = array(gTxt('rss_db_backup_failed'), E_WARNING);
+            } elseif ($error) {
+                unlink($backup_path);
+                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_WARNING);
+            } elseif (!is_file($backup_path)) {
+                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_WARNING);
+            } elseif (filesize($backup_path) == 0) {
+                unlink($backup_path);
+                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_WARNING);
+            } else {
+                $message = gTxt('rss_db_backup_ok', array('{db}' => $DB->db, '{filename}' => $filename));
+            }
+
+            pagetop(gTxt('rss_db_bk'), $message);
+
+        } elseif (gps("download")) {
+            $fn = gps("download");
+            $file_path = $rss_dbbk_path . '/' . $fn;
+            header("Pragma: public");
+            header("Expires: 0");
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: application/download");
+            if (substr($fn, -2) == "gz") header("Content-Type: application/zip");
+            header("Content-Disposition: attachment; filename=" . basename($file_path) . ";");
+            header("Content-Transfer-Encoding: binary");
+            header("Content-Length: " . filesize($file_path));
+            @readfile($file_path);
+        } elseif (gps("restore")) {
+            $safe_restore = txpspecialchars(gps("restore"));
+
+            if (stristr(gps("restore") , '.gz')) {
+                $backup_cmd = 'gunzip < ' . $rss_dbbk_path . '/' . $safe_restore . ' | ' . $rss_dbbk_mysql . $mysql_hup . ' ' . $DB->db;
+            } else {
+                $backup_cmd = $rss_dbbk_mysql . $mysql_hup . ' ' . $DB->db . ' < ' . $rss_dbbk_path . '/' . $safe_restore;
+            }
+
+            $bkdebug = ($rss_dbbk_debug) ? $backup_cmd : '';
+            $error = "";
+
+            if (function_exists('passthru')) {
+                passthru($backup_cmd, $error);
+            } else {
+                $dumpIt = popen($backup_cmd, 'r');
+                pclose($dumpIt);
+            }
+
+            if ($error) {
+                $message = array(gTxt('rss_db_restore_error', array('{error}' => $error)), E_WARNING);
+            } else {
+                $message = gTxt('rss_db_restore_ok', array('{filename}' => $safe_restore, '{db}' => $DB->db));
+            }
+
+            pagetop(gTxt('rss_db_bk'), $message);
+
+        } elseif (gps("delete")) {
+            $safe_delete = txpspecialchars(gps("delete"));
+
+            if (is_file($rss_dbbk_path . '/' . $safe_delete)) {
+                if (!unlink($rss_dbbk_path . '/' . $safe_delete)) {
+                    $message = array(gTxt('rss_db_delete_error', array('{filename}' => $safe_delete)), E_WARNING);
+                } else {
+                    $message = gTxt('rss_db_delete_ok', array('{filename}' => $safe_delete));
+                }
+            } else {
+                $message = array(gTxt('rss_db_delete_error', array('{filename}' => $safe_delete)), E_WARNING);
+            }
+
+            pagetop(gTxt('rss_db_bk'), $message);
+
+        } else {
+            pagetop(gTxt('rss_db_bk'));
+        }
+
+        $gzp = (!$iswin) ? " | " . href(gTxt('rss_db_gzip_file'), "index.php?event=rss_db_bk&amp;bk=$DB->db&amp;gzip=1") : "";
+        $sqlversion = getRow("SELECT VERSION() AS version");
+        $sqlv = explode("-", $sqlversion['version']);
+        $allownologs = ((float)$sqlv[0] >= (float)"4.1.9") ? tda(gTxt('rss_db_include_log') , ' style="text-align:right;vertical-align:middle"') . tda(yesnoRadio("rss_dbbk_txplog", $rss_dbbk_txplog) , ' style="text-align:left;vertical-align:middle"') : '';
+
+        if (isset($bkdebug) && $bkdebug) {
+            echo '<p align="center">' . $bkdebug . '</p>';
+        }
+
+        echo startTable('txp-list') .
+            form(
+                tr(
+                    tda(gTxt('rss_db_lock_tables'), ' style="text-align:right;vertical-align:middle"') .
+                    tda(yesnoRadio("rss_dbbk_lock", $rss_dbbk_lock), ' style="text-align:left;vertical-align:middle"') .
+                    $allownologs .
+                    tda(gTxt('rss_db_debug_mode'), ' style="text-align:right;vertical-align:middle"') .
+                    tda(yesnoRadio("rss_dbbk_debug", $rss_dbbk_debug), ' style="text-align:left;vertical-align:middle"') .
+                    tda(fInput("submit", "save", gTxt("save") , "publish") .
+                    eInput("rss_db_bk") .
+                    sInput('saveprefs'), " colspan=\"2\" class=\"noline\"")
+                ) .
+                tr(
+                    tda(gTxt('rss_db_backup_path'), ' style="text-align:right;vertical-align:middle"') .
+                    tda(text_input("rss_dbbk_path", $rss_dbbk_path, '50'), ' colspan="15"')
+                ) .
+                tr(
+                    tda(gTxt('rss_db_mysqldump_path'), ' style="text-align:right;vertical-align:middle"') .
+                    tda(text_input("rss_dbbk_dump", $rss_dbbk_dump, '50'), ' colspan="15"')
+                ) .
+                tr(
+                    tda(gTxt('rss_db_mysql_path'), ' style="text-align:right;vertical-align:middle"') .
+                    tda(text_input("rss_dbbk_mysql", $rss_dbbk_mysql, '50'), ' colspan="15"')
+                )
+            ) .
+            endTable() .
+            tag_start('div', array('class' => 'txp-listtables')) .
+            startTable("txp-list", '', 'txp-list') .
+            tr(
+                tda(hed(gTxt('rss_db_backup_create', array('{db}' => $DB->db)) .
+                    br .
+                    href(gTxt('rss_db_sql_file'), "index.php?event=rss_db_bk&amp;bk=$DB->db") . $gzp, 3), ' colspan="7" style="text-align:center;"')
+            ) .
+            tr(
+                tdcs(hed(gTxt('rss_db_backup_previous'), 1), 7)
+            ) .
+            tr(
+                hcell(gTxt('rss_db_backup_number')) .
+                hcell(gTxt('rss_db_backup_name')) .
+                hcell(gTxt('rss_db_backup_date')) .
+                hcell(gTxt('rss_db_backup_size')) .
+                hcell("") .
+                hcell("") .
+                hcell("")
+            );
+
+        $totalsize = 0;
+        $no = 0;
+
+        if (!$this->is_folder_empty($rss_dbbk_path)) {
             $database_files = array();
-            $dir = new DirectoryIterator($bkpath);
+            $dir = new DirectoryIterator($rss_dbbk_path);
 
             foreach ($dir as $file) {
                 $extension = $file->getExtension();
@@ -375,263 +429,280 @@ function rss_db_bk($event, $step)
                 $no++;
                 $database_text = substr($filename, 0, 50);
                 $date_text = strftime("%A, %B %d, %Y [%H:%M:%S]", $stamp);
-                $size_text = filesize($bkpath . '/' . $filename);
+                $size_text = filesize($rss_dbbk_path . '/' . $filename);
                 $totalsize+= $size_text;
-                echo tr(td($no) . td($database_text) . td($date_text) . td(prettyFileSize($size_text)) . '<td><a href="index.php?event=rss_db_bk&amp;download=' . $filename . '">Download</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;restore=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Restore</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;delete=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Delete</a></td>');
+                echo tr(td($no) . td($database_text) . td($date_text) . td($this->prettyFileSize($size_text)) . '<td><a href="index.php?event=rss_db_bk&amp;download=' . $filename . '">'.gTxt('download').'</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;restore=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">'.gTxt('rss_db_backup_restore').'</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;delete=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">'.gTxt('delete').'</a></td>');
             }
 
-            echo tr(tag($no . " Backup File(s)", "th", ' colspan="3"') . tag(prettyFileSize($totalsize) , "th", ' colspan="4"'));
+            echo tr(tag(gTxt('rss_db_backup_count', array('{count}' => $no)), "th", ' colspan="3"') . tag($this->prettyFileSize($totalsize) , "th", ' colspan="4"'));
         } else {
-            echo tr(tda(hed('You have no database backups' . br . 'Create a new backup of the ' . $DB->db . ' database' . br . href('.sql file', "index.php?event=rss_db_bk&amp;bk=$DB->db") . $gzp, 3) , ' colspan="7" style="text-align:center;"'));
-        }
-    } else {
-        echo tr(tda(hed('You have no database backups' . br . 'Create a new backup of the ' . $DB->db . ' database' . br . href('.sql file', "index.php?event=rss_db_bk&amp;bk=$DB->db") . $gzp, 3) , ' colspan="7" style="text-align:center;"'));
-    }
-
-    echo endTable().tag_end('div');
-}
-
-function rss_db_man($event, $step)
-{
-    global $DB;
-
-    if (gps("opt_table")) {
-        $query = "OPTIMIZE TABLE " . gps("opt_table");
-        safe_query($query);
-        pagetop("DB Manager", "Optimzed: " . gps("opt_table"));
-    } elseif (gps("rep_table")) {
-        $query = "REPAIR TABLE " . gps("rep_table");
-        safe_query($query);
-        pagetop("DB Manager", "Repaired: " . gps("rep_table"));
-    } elseif (gps("rep_all")) {
-        $query = "REPAIR TABLE " . gps("rep_all");
-        safe_query($query);
-        pagetop("DB Manager", "Repaired All Tables");
-    } elseif (gps("drop_table")) {
-        $query = "DROP TABLE " . gps("drop_table");
-        safe_query($query);
-        pagetop("DB Manager", "Dropped: " . gps("drop_table"));
-    } else {
-        pagetop("Database Manager");
-    }
-
-    $sqlversion = getRow("SELECT VERSION() AS version");
-    $headatts = ' style="color:#0069D1;padding:0 10px 0 5px;"';
-
-    echo startTable('dbinfo') .
-        tr(
-            hcell("Database Host:") .
-            tda($DB->host, $headatts) .
-            hcell("Database Name:") .
-            tda($DB->db, $headatts) .
-            hcell("Database User:") .
-            tda($DB->user, $headatts) .
-            hcell("Database Version:") .
-            tda("MySQL v" . $sqlversion['version'], $headatts)
-        ) .
-        endTable() .
-        br;
-
-    echo startTable('list', '', 'txp-list') .
-        tr(
-            hcell("No.") .
-            hcell("Tables") .
-            hcell("Records") .
-            hcell("Data Usage") .
-            hcell("Index Usage") .
-            hcell("Total Usage") .
-            hcell("Overhead") .
-            hcell("ErrNo") .
-            hcell("Repair") .
-            hcell("Backup") .
-            hcell("Drop")
-        );
-
-    if (version_compare($sqlversion['version'], '3.23', '>=')) {
-        $no = 0;
-        $row_usage = 0;
-        $data_usage = 0;
-        $index_usage = 0;
-        $overhead_usage = 0;
-        $alltabs = array();
-        $tablesstatus = getRows("SHOW TABLE STATUS");
-
-        foreach ($tablesstatus as $tablestatus) {
-            extract($tablestatus);
-            $q = "SHOW KEYS FROM `" . $Name . "`";
-            safe_query($q);
-            $mysqlErrno = mysqli_errno($DB->link);
-            $alltabs[] = $Name;
-            $color = ($mysqlErrno != 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
-            $color2 = ($Data_free > 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
-            $no++;
-            $row_usage+= $Rows;
-            $data_usage+= $Data_length;
-            $index_usage+= $Index_length;
-            $overhead_usage+= $Data_free;
-            echo tr(td($no) . td(href($Name, "index.php?event=rss_sql_run&amp;tn=" . $Name)) . td(" " . $Rows) . td(prettyFileSize($Data_length)) . td(prettyFileSize($Index_length)) . td(prettyFileSize($Data_length + $Index_length)) . tda(prettyFileSize($Data_free) , $color2) . tda(" " . $mysqlErrno, $color) . td(href("Repair", "index.php?event=rss_db_man&amp;rep_table=" . $Name)) . td(href("Backup", "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $Name) . '<td><a href="index.php?event=rss_db_man&amp;drop_table=' . $Name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Drop</a></td>'));
+            if (file_exists($rss_dbbk_path)) {
+                echo tr(tda(hed(gTxt('rss_db_backup_none'), 3), ' colspan="7" style="text-align:center;"'));
+            } else {
+                echo tr(tda(hed(gTxt('path_not_writable', array('{list}' => $rss_dbbk_path)), 3), ' colspan="7" style="text-align:center;"'));
+            }
         }
 
-        echo tr(hcell("Total") . hcell($no . " Tables") . hcell(number_format($row_usage)) . hcell(prettyFileSize($data_usage)) . hcell(prettyFileSize($index_usage)) . hcell(prettyFileSize($data_usage + $index_usage)) . hcell(prettyFileSize($overhead_usage)) . hcell() . tda(href(strong("Repair All") , "index.php?event=rss_db_man&amp;rep_all=" . implode(",", $alltabs)) , ' style="text-align:center;" colspan="3"'));
-    } else {
-        echo tr(tda("Could Not Show Table Status Because Your MYSQL Version Is Lower Than 3.23.", ' style="text-align:center;" colspan=14"'));
+        echo endTable().tag_end('div');
     }
 
-    echo tr(tda(href("Run SQL", "index.php?event=rss_sql_run") , ' style="text-align:center;" colspan="14"')) . endTable();
-}
+    /**
+     * Database table management panel
+     *
+     * @param   string  $evt  Textpattern event (panel)
+     * @param   string  $stp  Textpattern step (action)
+     */
+    public function db_man($event, $step)
+    {
+        global $DB;
 
-function rss_sql_run($event, $step)
-{
-    global $DB;
+        if (gps("opt_table")) {
+            $query = "OPTIMIZE TABLE " . gps("opt_table");
+            safe_query($query);
+            pagetop(gTxt('rss_db_man'), "Optimzed: " . gps("opt_table"));
+        } elseif (gps("rep_table")) {
+            $query = "REPAIR TABLE " . gps("rep_table");
+            safe_query($query);
+            pagetop(gTxt('rss_db_man'), "Repaired: " . gps("rep_table"));
+        } elseif (gps("rep_all")) {
+            $query = "REPAIR TABLE " . gps("rep_all");
+            safe_query($query);
+            pagetop(gTxt('rss_db_man'), "Repaired All Tables");
+        } elseif (gps("drop_table")) {
+            $query = "DROP TABLE " . gps("drop_table");
+            safe_query($query);
+            pagetop(gTxt('rss_db_man'), "Dropped: " . gps("drop_table"));
+        } else {
+            pagetop(gTxt('rss_db_man'));
+        }
 
-    pagetop("Run SQL Query");
-    $text = "";
-    $rsd[] = "";
-    $sql_query2 = "";
+        $sqlversion = getRow("SELECT VERSION() AS version");
+        $headatts = ' style="color:#0069D1;padding:0 10px 0 5px;"';
 
-    if (gps("tn")) {
-        $tq = "select * from " . gps("tn");
-    }
+        echo startTable('dbinfo') .
+            tr(
+                hcell("Database Host:") .
+                tda($DB->host, $headatts) .
+                hcell("Database Name:") .
+                tda($DB->db, $headatts) .
+                hcell("Database User:") .
+                tda($DB->user, $headatts) .
+                hcell("Database Version:") .
+                tda("MySQL v" . $sqlversion['version'], $headatts)
+            ) .
+            endTable() .
+            br;
 
-    if (gps("sql_query") || gps("tn")) {
-        $sql_queries2 = (gps("sql_query")) ? trim(gps("sql_query")) : trim($tq);
-        $totalquerycount = 0;
-        $successquery = 0;
+        echo startTable('list', '', 'txp-list') .
+            tr(
+                hcell("No.") .
+                hcell("Tables") .
+                hcell("Records") .
+                hcell("Data Usage") .
+                hcell("Index Usage") .
+                hcell("Total Usage") .
+                hcell("Overhead") .
+                hcell("ErrNo") .
+                hcell("Repair") .
+                hcell("Backup") .
+                hcell("Drop")
+            );
 
-        if ($sql_queries2) {
-            $sql_queries = array();
-            $sql_queries2 = explode("\n", $sql_queries2);
+        if (version_compare($sqlversion['version'], '3.23', '>=')) {
+            $no = 0;
+            $row_usage = 0;
+            $data_usage = 0;
+            $index_usage = 0;
+            $overhead_usage = 0;
+            $alltabs = array();
+            $tablesstatus = getRows("SHOW TABLE STATUS");
 
-            foreach ($sql_queries2 as $sql_query2) {
-                $sql_query2 = trim(stripslashes($sql_query2));
-                $sql_query2 = preg_replace("/[\r\n]+/", '', $sql_query2);
-
-                if (!empty($sql_query2)) {
-                    $sql_queries[] = $sql_query2;
-                }
+            foreach ($tablesstatus as $tablestatus) {
+                extract($tablestatus);
+                $q = "SHOW KEYS FROM `" . $Name . "`";
+                safe_query($q);
+                $mysqlErrno = mysqli_errno($DB->link);
+                $alltabs[] = $Name;
+                $color = ($mysqlErrno != 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
+                $color2 = ($Data_free > 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
+                $no++;
+                $row_usage+= $Rows;
+                $data_usage+= $Data_length;
+                $index_usage+= $Index_length;
+                $overhead_usage+= $Data_free;
+                echo tr(td($no) . td(href($Name, "index.php?event=rss_sql_run&amp;tn=" . $Name)) . td(" " . $Rows) . td($this->prettyFileSize($Data_length)) . td($this->prettyFileSize($Index_length)) . td($this->prettyFileSize($Data_length + $Index_length)) . tda($this->prettyFileSize($Data_free) , $color2) . tda(" " . $mysqlErrno, $color) . td(href("Repair", "index.php?event=rss_db_man&amp;rep_table=" . $Name)) . td(href("Backup", "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $Name) . '<td><a href="index.php?event=rss_db_man&amp;drop_table=' . $Name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Drop</a></td>'));
             }
 
-            foreach ($sql_queries as $sql_query) {
-                if (preg_match("/^\\s*(insert|update|replace|delete|create|truncate) /i", $sql_query)) {
-                    $run_query = safe_query($sql_query);
+            echo tr(hcell("Total") . hcell($no . " Tables") . hcell(number_format($row_usage)) . hcell($this->prettyFileSize($data_usage)) . hcell($this->prettyFileSize($index_usage)) . hcell($this->prettyFileSize($data_usage + $index_usage)) . hcell($this->prettyFileSize($overhead_usage)) . hcell() . tda(href(strong("Repair All") , "index.php?event=rss_db_man&amp;rep_all=" . implode(",", $alltabs)) , ' style="text-align:center;" colspan="3"'));
+        } else {
+            echo tr(tda("Could Not Show Table Status Because Your MYSQL Version Is Lower Than 3.23.", ' style="text-align:center;" colspan=14"'));
+        }
 
-                    if (!$run_query) {
-                        $text.= graf(mysqli_error($DB->link) , ' style="color:#D10000;"');
-                        $text.= graf($sql_query, ' style="color:#D10000;"');
-                    } else {
-                        $successquery++;
-                        $text.= graf($sql_query, ' style="color:#4B9F00;"');
+        echo tr(tda(href("Run SQL", "index.php?event=rss_sql_run") , ' style="text-align:center;" colspan="14"')) . endTable();
+    }
+
+    /**
+     * Database run SQL panel
+     *
+     * @param   string  $evt  Textpattern event (panel)
+     * @param   string  $stp  Textpattern step (action)
+     */
+    public function db_sql($event, $step)
+    {
+        global $DB;
+
+        pagetop(gTxt('rss_db_runn'));
+        $text = "";
+        $rsd[] = "";
+        $sql_query2 = "";
+
+        if (gps("tn")) {
+            $tq = "select * from " . gps("tn");
+        }
+
+        if (gps("sql_query") || gps("tn")) {
+            $sql_queries2 = (gps("sql_query")) ? trim(gps("sql_query")) : trim($tq);
+            $totalquerycount = 0;
+            $successquery = 0;
+
+            if ($sql_queries2) {
+                $sql_queries = array();
+                $sql_queries2 = explode("\n", $sql_queries2);
+
+                foreach ($sql_queries2 as $sql_query2) {
+                    $sql_query2 = trim(stripslashes($sql_query2));
+                    $sql_query2 = preg_replace("/[\r\n]+/", '', $sql_query2);
+
+                    if (!empty($sql_query2)) {
+                        $sql_queries[] = $sql_query2;
                     }
+                }
 
-                    $totalquerycount++;
-                } elseif (preg_match("/^\\s*(select) /i", $sql_query)) {
-                    $run_query = safe_query($sql_query);
+                foreach ($sql_queries as $sql_query) {
+                    if (preg_match("/^\\s*(insert|update|replace|delete|create|truncate) /i", $sql_query)) {
+                        $run_query = safe_query($sql_query);
 
-                    if ($run_query) {
-                        $successquery++;
-                    }
-
-                    if ($run_query && mysqli_num_rows($run_query) > 0) {
-                        /* get column metadata */
-                        $i = 0;
-                        $headers = "";
-
-                        while ($i < mysqli_num_fields($run_query)) {
-                            $meta = mysqli_fetch_field($run_query);
-                            $headers.= hcell($meta->name);
-                            $i++;
+                        if (!$run_query) {
+                            $text.= graf(mysqli_error($DB->link) , ' style="color:#D10000;"');
+                            $text.= graf($sql_query, ' style="color:#D10000;"');
+                        } else {
+                            $successquery++;
+                            $text.= graf($sql_query, ' style="color:#4B9F00;"');
                         }
 
-                        $rsd[] = '<div class="scrollWrapper">' . startTable('list', '', 'txp-list scrollable') . '<thead>' . tr($headers) . '</thead><tbody>';
+                        $totalquerycount++;
+                    } elseif (preg_match("/^\\s*(select) /i", $sql_query)) {
+                        $run_query = safe_query($sql_query);
 
-                        while ($a = mysqli_fetch_assoc($run_query)) {
-                            $out[] = $a;
+                        if ($run_query) {
+                            $successquery++;
                         }
 
-                        mysqli_free_result($run_query);
+                        if ($run_query && mysqli_num_rows($run_query) > 0) {
+                            /* get column metadata */
+                            $i = 0;
+                            $headers = "";
 
-                        foreach ($out as $b) {
-                            $data = "";
-
-                            foreach ($b as $f) {
-                                $data.= td($f);
+                            while ($i < mysqli_num_fields($run_query)) {
+                                $meta = mysqli_fetch_field($run_query);
+                                $headers.= hcell($meta->name);
+                                $i++;
                             }
 
-                            $rsd[] = tr($data);
+                            $rsd[] = '<div class="scrollWrapper">' . startTable('list', '', 'txp-list scrollable') . '<thead>' . tr($headers) . '</thead><tbody>';
+
+                            while ($a = mysqli_fetch_assoc($run_query)) {
+                                $out[] = $a;
+                            }
+
+                            mysqli_free_result($run_query);
+
+                            foreach ($out as $b) {
+                                $data = "";
+
+                                foreach ($b as $f) {
+                                    $data.= td($f);
+                                }
+
+                                $rsd[] = tr($data);
+                            }
+
+                            $rsd[] = '</tbody>' . endTable() . '</div>' . br;
+                            $out = array();
+                        } else {
+                            $text.= graf(mysqli_error($DB->link) , ' style="color:#D10000;"');
                         }
 
-                        $rsd[] = '</tbody>' . endTable() . '</div>' . br;
-                        $out = array();
-                    } else {
-                        $text.= graf(mysqli_error($DB->link) , ' style="color:#D10000;"');
+                        $text.= graf($sql_query, ' style="color:#D10000;"');
+                        $totalquerycount++;
+                    } elseif (preg_match("/^\\s*(drop|show|grant) /i", $sql_query)) {
+                        $text.= graf($sql_query . " - QUERY TYPE NOT SUPPORTED", ' style="color:#D10000;"');
+                        $totalquerycount++;
                     }
-
-                    $text.= graf($sql_query, ' style="color:#D10000;"');
-                    $totalquerycount++;
-                } elseif (preg_match("/^\\s*(drop|show|grant) /i", $sql_query)) {
-                    $text.= graf($sql_query . " - QUERY TYPE NOT SUPPORTED", ' style="color:#D10000;"');
-                    $totalquerycount++;
                 }
+
+                $text.= graf($successquery . "/" . $totalquerycount . " Query(s) Executed Successfully", ' style="color:#0069D1;"');
             }
-
-            $text.= graf($successquery . "/" . $totalquerycount . " Query(s) Executed Successfully", ' style="color:#0069D1;"');
         }
-    }
 
-    echo startTable('edit') .
-        tr(
-            td(
-                form(
-                    graf("Each query must be on a single line.You may run multiple queries at once by starting a new line." .
+        echo startTable('edit') .
+            tr(
+                td(
+                    form(
+                        graf("Each query must be on a single line.You may run multiple queries at once by starting a new line." .
+                            br .
+                            "Supported query types include SELECT, INSERT, UPDATE, CREATE, REPLACE, and DELETE.") .
+                        graf("WARNING: All SQL run in this window will immediately and permanently change your database.", ' style="font-weight:bold;"') .
+                        text_area('sql_query', '200', '550', $sql_query2) .
                         br .
-                        "Supported query types include SELECT, INSERT, UPDATE, CREATE, REPLACE, and DELETE.") .
-                    graf("WARNING: All SQL run in this window will immediately and permanently change your database.", ' style="font-weight:bold;"') .
-                    text_area('sql_query', '200', '550', $sql_query2) .
-                    br .
-                    fInput('submit', 'run', gTxt('Run'), 'publish') .
-                    href("Go to Database Manager", "index.php?event=rss_db_man") .
-                    eInput('rss_sql_run'), '', ' verify(\'' . gTxt('are_you_sure') . '\')"'
+                        fInput('submit', 'run', gTxt('Run'), 'publish') .
+                        href("Go to Database Manager", "index.php?event=rss_db_man") .
+                        eInput('rss_sql_run'), '', ' verify(\'' . gTxt('are_you_sure') . '\')"'
+                    )
                 )
-            )
-        ) .
-        tr(
-            td(graf($text . br . implode('', $rsd)))
-        ) .
-        endTable();
-}
-
-function prettyFileSize($bytes)
-{
-    if ($bytes < 1024) {
-        return "$bytes bytes";
-    } elseif (strlen($bytes) <= 9 && strlen($bytes) >= 7) {
-        return number_format($bytes / 1048576, 2) . " MB";
-    } elseif (strlen($bytes) >= 10) {
-        return number_format($bytes / 1073741824, 2) . " GB";
+            ) .
+            tr(
+                td(graf($text . br . implode('', $rsd)))
+            ) .
+            endTable();
     }
 
-    return number_format($bytes / 1024, 2) . " KB";
-}
-
-function is_folder_empty($dir)
-{
-    if (is_dir($dir)) {
-        $dl = opendir($dir);
-
-        if ($dl) {
-            while ($name = readdir($dl)) {
-                if (!is_dir("$dir/$name")) {
-                    return false;
-                    break;
-                }
-            }
-
-            closedir($dl);
+    protected function prettyFileSize($bytes)
+    {
+        if ($bytes < 1024) {
+            return "$bytes bytes";
+        } elseif (strlen($bytes) <= 9 && strlen($bytes) >= 7) {
+            return number_format($bytes / 1048576, 2) . " MB";
+        } elseif (strlen($bytes) >= 10) {
+            return number_format($bytes / 1073741824, 2) . " GB";
         }
 
-        return true;
-    } else return true;
+        return number_format($bytes / 1024, 2) . " KB";
+    }
+
+    protected function is_folder_empty($dir)
+    {
+        if (is_dir($dir)) {
+            $dl = opendir($dir);
+
+            if ($dl) {
+                while ($name = readdir($dl)) {
+                    if (!is_dir("$dir/$name")) {
+                        return false;
+                        break;
+                    }
+                }
+
+                closedir($dl);
+            }
+
+            return true;
+        } else {
+            return true;
+        }
+    }
 }
+
 # --- END PLUGIN CODE ---
 if (0) {
 ?>
