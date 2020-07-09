@@ -233,7 +233,6 @@ class rss_admin_db_manager
 
         include (txpath . '/include/txp_prefs.php');
 
-        $iswin = preg_match('/Win/', php_uname());
         $mysql_hup = ' -h' . $DB->host . ' -u' . $DB->user . ' -p' . escapeshellcmd($DB->pass);
 
         foreach ($this->prefs as $key => $options) {
@@ -292,13 +291,18 @@ class rss_admin_db_manager
         } elseif (gps("download")) {
             $fn = gps("download");
             $file_path = $rss_dbbk_path . '/' . $fn;
+
             header("Pragma: public");
             header("Expires: 0");
             header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
             header("Content-Type: application/force-download");
             header("Content-Type: application/octet-stream");
             header("Content-Type: application/download");
-            if (substr($fn, -2) == "gz") header("Content-Type: application/zip");
+
+            if (substr($fn, -2) == "gz") {
+                header("Content-Type: application/zip");
+            }
+
             header("Content-Disposition: attachment; filename=" . basename($file_path) . ";");
             header("Content-Transfer-Encoding: binary");
             header("Content-Length: " . filesize($file_path));
@@ -349,7 +353,7 @@ class rss_admin_db_manager
             pagetop(gTxt('rss_db_bk'));
         }
 
-        $gzp = (!$iswin) ? " | " . href(gTxt('rss_db_gzip_file'), "index.php?event=rss_db_bk&amp;bk=$DB->db&amp;gzip=1") : "";
+        $gzp = (!IS_WIN) ? " | " . href(gTxt('rss_db_gzip_file'), "index.php?event=rss_db_bk&amp;bk=$DB->db&amp;gzip=1") : "";
         $sqlversion = getRow("SELECT VERSION() AS version");
         $sqlv = explode("-", $sqlversion['version']);
         $allownologs = ((float)$sqlv[0] >= (float)"4.1.9") ? tda(gTxt('rss_db_include_log') , ' style="text-align:right;vertical-align:middle"') . tda(yesnoRadio("rss_dbbk_txplog", $rss_dbbk_txplog) , ' style="text-align:left;vertical-align:middle"') : '';
