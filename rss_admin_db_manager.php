@@ -177,14 +177,14 @@ function rss_db_bk($event, $step)
         $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_path) . "'", "name='rss_dbbk_path'");
     }
 
-    if (!isset($rss_dbbk_dump)) {
+    if (empty($rss_dbbk_dump)) {
         $rss_dbbk_dump = "mysqldump";
-        $rs = safe_insert('txp_prefs', "name='rss_dbbk_dump', val='" . addslashes($rss_dbbk_dump) . "'");
+        $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_dump) . "'", "name='rss_dbbk_dump'");
     }
 
-    if (!isset($rss_dbbk_mysql)) {
+    if (empty($rss_dbbk_mysql)) {
         $rss_dbbk_mysql = "mysql";
-        $rs = safe_insert('txp_prefs', "name='rss_dbbk_mysql', val='" . addslashes($rss_dbbk_mysql) . "'");
+        $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_mysql) . "'", "name='rss_dbbk_mysql'");
     }
 
     include (txpath . '/include/txp_prefs.php');
