@@ -156,7 +156,7 @@ if (txpinterface === 'admin') {
 
 function rss_db_bk($event, $step)
 {
-    global $prefs, $rss_dbbk_path, $rss_dbbk_dump, $rss_dbbk_mysql, $rss_dbbk_lock, $rss_dbbk_txplog, $rss_dbbk_debug, $DB, $file_base_path;
+    global $prefs, $rss_dbbk_path, $rss_dbbk_dump, $rss_dbbk_mysql, $rss_dbbk_lock, $rss_dbbk_txplog, $rss_dbbk_debug, $DB;
     if (!isset($rss_dbbk_lock)) {
         $rss_dbbk_lock = "1";
         $rs = safe_insert('txp_prefs', "name='rss_dbbk_lock', val='$rss_dbbk_lock'");
@@ -172,9 +172,9 @@ function rss_db_bk($event, $step)
         $rs = safe_insert('txp_prefs', "name='rss_dbbk_debug', val='$rss_dbbk_debug'");
     }
 
-    if (!isset($rss_dbbk_path)) {
-        $rss_dbbk_path = $file_base_path;
-        $rs = safe_insert('txp_prefs', "name='rss_dbbk_path', val='" . addslashes($rss_dbbk_path) . "'");
+    if (empty($rss_dbbk_path)) {
+        $rss_dbbk_path = get_pref('tempdir', sys_get_temp_dir());
+        $rs = safe_upsert('txp_prefs', "val='" . addslashes($rss_dbbk_path) . "'", "name='rss_dbbk_path'");
     }
 
     if (!isset($rss_dbbk_dump)) {
