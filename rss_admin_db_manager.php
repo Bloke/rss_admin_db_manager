@@ -20,7 +20,7 @@ $plugin['name'] = 'rss_admin_db_manager';
 $plugin['version'] = '4.6.0';
 $plugin['author'] = 'Rob Sable / Stef Dawson';
 $plugin['author_uri'] = 'https://stefdawson.com/';
-$plugin['description'] = 'Database management system.';
+$plugin['description'] = 'Database management system for Textpattern';
 
 // Plugin load order:
 // The default value of 5 would fit most plugins, while for instance comment

@@ -1,0 +1,11 @@
+{
+  "name": "rss_admin_db_manager",
+  "description": "Database management system for Textpattern",
+  "version": "4.6.0",
+  "type": 3,
+  "author": "Rob Sable / Stef Dawson",
+  "author_uri": "https://stefdawson.com/",
+  "order": 5,
+  "flags": 2,
+  "help": {"file" : ["./README.textile"]}
+}

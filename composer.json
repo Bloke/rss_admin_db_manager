@@ -1,0 +1,16 @@
+{
+  "name": "bloke/rss_admin_db_manager",
+  "description": "Database management system for Textpattern",
+  "keywords": ["textpattern", "plugin", "database", "MySQL", "SQL", "query", "backup", "repair", "optimize", "table"],
+  "homepage": "https://github.com/bloke/rss_admin_db_manager",
+  "license": "GPL-2.0",
+  "type": "textpattern-plugin",
+  "support": {
+    "issues": "https://github.com/bloke/rss_admin_db_manager/issues",
+    "source": "https://github.com/bloke/rss_admin_db_manager"
+  },
+  "require": {
+    "textpattern/lock": ">=4.8.0",
+    "textpattern/installer": "*"
+  }
+}
