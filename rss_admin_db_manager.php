@@ -793,6 +793,7 @@ h3(#backup-preferences). Backup preferences
 Set several preferences related to your database backups. You can set these options on the Database backup panel. The options are:
 
 * *Lock Tables* - Your host may or may not support this option. If your backup fails, try setting this to “No”.
+* *Include txp_log* - Include or omit the txp_log table from the backup.
 * *Debug Mode* - Turning debugging on will echo the command being run to the screen.
 * *Backup Path* - Set the directory that your backups will be saved to. Defaults to your Textpattern temp directory.
 * *Mysqldump Path* - It's likely that the default will work for you. If not, enter the full path to the executable.
