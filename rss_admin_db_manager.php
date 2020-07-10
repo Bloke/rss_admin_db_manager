@@ -57,7 +57,7 @@ $plugin['textpack'] = <<< EOT
 #@owner rss_admin_db_manager
 #@language en, en-gb, en-us
 #@admin-side
-rss_db_bk => Database backup
+rss_db_bak => Database backup
 rss_db_man => Database manager
 rss_db_run => Run SQL
 rss_db_row_number => No.
@@ -91,7 +91,7 @@ rss_db_table_repair => Repair
 rss_db_table_repair_all => Repair all
 rss_db_table_repaired => Repaired {table}
 rss_db_table_repaired_all => Repaired all tables
-#@rss_db_bk
+#@rss_db_bak
 rss_db_backup_count => Backup file(s): {count}
 rss_db_backup_create => Create a new backup of the {db} database
 rss_db_backup_date => Backup date/time
@@ -186,18 +186,25 @@ class rss_admin_db_manager
 
         add_privs('rss_db_man', $this->privs);
         add_privs('rss_sql_run', $this->privs);
-        add_privs('rss_db_bk', $this->privs);
+        add_privs('rss_db_bak', $this->privs);
 
         register_callback(array($this, 'welcome'), 'plugin_lifecycle.'.$this->event);
 
-        register_tab("extensions", "rss_db_man", gTxt('rss_db_man'));
+        register_callback(function() {
+            register_tab('extensions', 'rss_db_man', gTxt('rss_db_man'));
+        }, 'admin_side', 'head_end');
+
+        register_callback(function() {
+            register_tab('extensions', 'rss_sql_run', gTxt('rss_db_run'));
+        }, 'admin_side', 'head_end');
+
+        register_callback(function() {
+            register_tab('extensions', 'rss_db_bak', gTxt('rss_db_bak'));
+        }, 'admin_side', 'head_end');
+
         register_callback(array($this, 'db_man'), "rss_db_man");
-
-        register_tab("extensions", "rss_sql_run", gTxt('rss_db_run'));
         register_callback(array($this, 'db_sql'), "rss_sql_run");
-
-        register_tab("extensions", "rss_db_bk", gTxt('rss_db_bk'));
-        register_callback(array($this, 'db_bak'), "rss_db_bk");
+        register_callback(array($this, 'db_bak'), "rss_db_bak");
     }
 
     /**
@@ -310,7 +317,7 @@ class rss_admin_db_manager
                 $message = gTxt('rss_db_backup_ok', array('{db}' => $DB->db, '{filename}' => $filename));
             }
 
-            pagetop(gTxt('rss_db_bk'), $message);
+            pagetop(gTxt('rss_db_bak'), $message);
 
         } elseif (gps("download")) {
             $fn = gps("download");
@@ -356,7 +363,7 @@ class rss_admin_db_manager
                 $message = gTxt('rss_db_restore_ok', array('{filename}' => $safe_restore, '{db}' => $DB->db));
             }
 
-            pagetop(gTxt('rss_db_bk'), $message);
+            pagetop(gTxt('rss_db_bak'), $message);
 
         } elseif (gps("delete")) {
             $safe_delete = txpspecialchars(gps("delete"));
@@ -371,13 +378,13 @@ class rss_admin_db_manager
                 $message = array(gTxt('rss_db_delete_error', array('{filename}' => $safe_delete)), E_WARNING);
             }
 
-            pagetop(gTxt('rss_db_bk'), $message);
+            pagetop(gTxt('rss_db_bak'), $message);
 
         } else {
-            pagetop(gTxt('rss_db_bk'));
+            pagetop(gTxt('rss_db_bak'));
         }
 
-        $gzp = (!IS_WIN) ? " | " . href(gTxt('rss_db_gzip_file'), "index.php?event=rss_db_bk&amp;bk=$DB->db&amp;gzip=1") : "";
+        $gzp = (!IS_WIN) ? " | " . href(gTxt('rss_db_gzip_file'), "index.php?event=rss_db_bak&amp;bk=$DB->db&amp;gzip=1") : "";
         $sqlversion = getRow("SELECT VERSION() AS version");
         $sqlv = explode("-", $sqlversion['version']);
         $allownologs = ((float)$sqlv[0] >= (float)"4.1.9") ? tda(gTxt('rss_db_include_log') , ' style="text-align:right;vertical-align:middle"') . tda(yesnoRadio("rss_dbbk_txplog", $rss_dbbk_txplog) , ' style="text-align:left;vertical-align:middle"') : '';
@@ -396,7 +403,7 @@ class rss_admin_db_manager
                     tda(gTxt('rss_db_debug_mode'), ' style="text-align:right;vertical-align:middle"') .
                     tda(yesnoRadio("rss_dbbk_debug", $rss_dbbk_debug), ' style="text-align:left;vertical-align:middle"') .
                     tda(fInput("submit", "save", gTxt("save") , "publish") .
-                    eInput("rss_db_bk") .
+                    eInput("rss_db_bak") .
                     sInput('saveprefs'), " colspan=\"2\" class=\"noline\"")
                 ) .
                 tr(
@@ -418,7 +425,7 @@ class rss_admin_db_manager
             tr(
                 tda(hed(gTxt('rss_db_backup_create', array('{db}' => $DB->db)) .
                     br .
-                    href(gTxt('rss_db_sql_file'), "index.php?event=rss_db_bk&amp;bk=$DB->db") . $gzp, 3), ' colspan="7" style="text-align:center;"')
+                    href(gTxt('rss_db_sql_file'), "index.php?event=rss_db_bak&amp;bk=$DB->db") . $gzp, 3), ' colspan="7" style="text-align:center;"')
             ) .
             tr(
                 tdcs(hed(gTxt('rss_db_backup_previous'), 1), 7)
@@ -460,7 +467,7 @@ class rss_admin_db_manager
                 $date_text = strftime("%A, %B %d, %Y [%H:%M:%S]", $stamp);
                 $size_text = filesize($rss_dbbk_path . '/' . $filename);
                 $totalsize+= $size_text;
-                echo tr(td($no) . td($database_text) . td($date_text) . td($this->prettyFileSize($size_text)) . '<td><a href="index.php?event=rss_db_bk&amp;download=' . $filename . '">'.gTxt('download').'</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;restore=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">'.gTxt('rss_db_backup_restore').'</a></td>' . '<td><a href="index.php?event=rss_db_bk&amp;delete=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">'.gTxt('delete').'</a></td>');
+                echo tr(td($no) . td($database_text) . td($date_text) . td($this->prettyFileSize($size_text)) . '<td><a href="index.php?event=rss_db_bak&amp;download=' . $filename . '">'.gTxt('download').'</a></td>' . '<td><a href="index.php?event=rss_db_bak&amp;restore=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">'.gTxt('rss_db_backup_restore').'</a></td>' . '<td><a href="index.php?event=rss_db_bak&amp;delete=' . $filename . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">'.gTxt('delete').'</a></td>');
             }
 
             echo tr(tag(gTxt('rss_db_backup_count', array('{count}' => $no)), "th", ' colspan="3"') . tag($this->prettyFileSize($totalsize) , "th", ' colspan="4"'));
@@ -576,7 +583,7 @@ class rss_admin_db_manager
                 tda($this->prettyFileSize($Data_free), $color2) .
                 tda(" " . $mysqlErrno, $color) .
                 td(($Engine === 'MyISAM' ? href(gTxt('rss_db_table_repair'), "index.php?event=rss_db_man&amp;rep_table=" . $sani_name) .n : '').
-                    href(gTxt('rss_db_table_backup'), "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $sani_name) .n.
+                    href(gTxt('rss_db_table_backup'), "index.php?event=rss_db_bak&amp;bk=1&amp;bk_table=" . $sani_name) .n.
                     href(gTxt('rss_db_table_optimize'), "index.php?event=rss_db_man&amp;opt_table=" . $sani_name) .n.
                     '<a href="index.php?event=rss_db_man&amp;drop_table=' . $sani_name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">' . gTxt('rss_db_table_drop') . '</a>'));
         }
