@@ -259,8 +259,6 @@ class rss_admin_db_manager
     {
         global $DB;
 
-        include (txpath . '/include/txp_prefs.php');
-
         $mysql_hup = ' -h' . $DB->host . ' -u' . $DB->user . ' -p' . escapeshellcmd($DB->pass);
 
         foreach ($this->prefs as $key => $options) {
@@ -404,15 +402,15 @@ class rss_admin_db_manager
                 ) .
                 tr(
                     tda(gTxt('rss_db_backup_path'), ' style="text-align:right;vertical-align:middle"') .
-                    tda(text_input("rss_dbbk_path", $rss_dbbk_path, '50'), ' colspan="15"')
+                    tda(fInput('text', "rss_dbbk_path", $rss_dbbk_path, '', '', '', '50'), ' colspan="15"')
                 ) .
                 tr(
                     tda(gTxt('rss_db_mysqldump_path'), ' style="text-align:right;vertical-align:middle"') .
-                    tda(text_input("rss_dbbk_dump", $rss_dbbk_dump, '50'), ' colspan="15"')
+                    tda(fInput('text', "rss_dbbk_dump", $rss_dbbk_dump, '', '', '', '50'), ' colspan="15"')
                 ) .
                 tr(
                     tda(gTxt('rss_db_mysql_path'), ' style="text-align:right;vertical-align:middle"') .
-                    tda(text_input("rss_dbbk_mysql", $rss_dbbk_mysql, '50'), ' colspan="15"')
+                    tda(fInput('text', "rss_dbbk_mysql", $rss_dbbk_mysql, '', '', '', '50'), ' colspan="15"')
                 )
             ) .
             endTable() . tag_end('div').
