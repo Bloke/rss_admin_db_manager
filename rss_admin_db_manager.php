@@ -62,6 +62,13 @@ rss_db_man => Database manager
 rss_db_run => Run SQL
 rss_db_row_number => No.
 #@rss_sql_run
+rss_db_goto_dm => Database management
+rss_db_query_preamble1 => Each query must be on a single line. You may run multiple queries at once by starting a new line.
+rss_db_query_preamble2 => Supported query types: SELECT, INSERT, UPDATE, CREATE, REPLACE, and DELETE.
+rss_db_query_success => {done}/{total} query(s) executed successfully
+rss_db_query_unsupported => - QUERY TYPE NOT SUPPORTED
+rss_db_query_warning => WARNING: All SQL run in this window will immediately and permanently change your database.
+rss_db_query_run => Run
 #@rss_db_man
 rss_db_head_table => Table
 rss_db_head_records => Records
@@ -604,7 +611,7 @@ class rss_admin_db_manager
     {
         global $DB;
 
-        pagetop(gTxt('rss_db_runn'));
+        pagetop(gTxt('rss_db_run'));
         $text = "";
         $rsd[] = "";
         $sql_query2 = "";
@@ -689,12 +696,12 @@ class rss_admin_db_manager
                         $text.= graf($sql_query, ' style="color:#D10000;"');
                         $totalquerycount++;
                     } elseif (preg_match("/^\\s*(drop|show|grant) /i", $sql_query)) {
-                        $text.= graf($sql_query . " - QUERY TYPE NOT SUPPORTED", ' style="color:#D10000;"');
+                        $text.= graf($sql_query . gTxt('rss_db_query_unsupported'), ' style="color:#D10000;"');
                         $totalquerycount++;
                     }
                 }
 
-                $text.= graf($successquery . "/" . $totalquerycount . " Query(s) Executed Successfully", ' style="color:#0069D1;"');
+                $text.= graf(gTxt('rss_db_query_success', array('{done}' => $successquery, '{total}' => $totalquerycount)), ' style="color:#0069D1;"');
             }
         }
 
@@ -702,14 +709,12 @@ class rss_admin_db_manager
             tr(
                 td(
                     form(
-                        graf("Each query must be on a single line.You may run multiple queries at once by starting a new line." .
-                            br .
-                            "Supported query types include SELECT, INSERT, UPDATE, CREATE, REPLACE, and DELETE.") .
-                        graf("WARNING: All SQL run in this window will immediately and permanently change your database.", ' style="font-weight:bold;"') .
+                        graf(gTxt('rss_db_query_preamble1') . br . gTxt('rss_db_query_preamble2')) .
+                        graf(gTxt('rss_db_query_warning'), ' style="font-weight:bold;"') .
                         text_area('sql_query', '200', '550', $sql_query2) .
                         br .
-                        fInput('submit', 'run', gTxt('Run'), 'publish') .
-                        href("Go to Database Manager", "index.php?event=rss_db_man") .
+                        fInput('submit', 'run', gTxt('rss_db_query_run'), 'publish') . n.
+                        href(gTxt('rss_db_goto_dm'), "index.php?event=rss_db_man") .
                         eInput('rss_sql_run'), '', ' verify(\'' . gTxt('are_you_sure') . '\')"'
                     )
                 )
@@ -720,19 +725,23 @@ class rss_admin_db_manager
             endTable();
     }
 
+    /**
+     * Display sizes in the most suitable format.
+     *
+     * @param  int    $bytes Number of bytes to convert into better units
+     * @return string
+     */
     protected function prettyFileSize($bytes)
     {
-        if ($bytes < 1024) {
-            return "$bytes bytes";
-        } elseif (strlen($bytes) <= 9 && strlen($bytes) >= 7) {
-            return number_format($bytes / 1048576, 2) . " MB";
-        } elseif (strlen($bytes) >= 10) {
-            return number_format($bytes / 1073741824, 2) . " GB";
-        }
-
-        return number_format($bytes / 1024, 2) . " KB";
+        return format_filesize($bytes, ($bytes == 0 ? 0 : 2));
     }
 
+    /**
+     * Determines if the passed folder contains files.
+     *
+     * @param  string  $dir Directory to test
+     * @return boolean
+     */
     protected function is_folder_empty($dir)
     {
         if (is_dir($dir)) {
@@ -761,15 +770,15 @@ if (0) {
 ?>
 <!--
 # --- BEGIN PLUGIN HELP ---
-h1. Textpattern Database Manager
+h1. Textpattern database manager
 
-The rss_admin_db_manager plugin adds three menu items to your Textpattern admin interface. Each contains different functionality to help manage your "MySQL":http://www.mysql.com/ database. You can think of this plugin as a lightweight replacement for "phpMyAdmin":http://www.phpmyadmin.net/home_page/.
+The rss_admin_db_manager plugin adds three menu items to your Textpattern admin interface. Each contains different functionality to help manage your "MySQL":https://www.mysql.com/ database. You can think of this plugin as a lightweight replacement for "phpMyAdmin":https://www.phpmyadmin.net/.
 
-h2(#database-backup). Database Backup
+h2(#database-backup). Database backup
 
-The *DB Backup panel* allows you to backup, download and restore the MySQL database that is used for your Textpattern installation.
+The _Database backup_ panel allows you to backup, download and restore the MySQL database that is used for your Textpattern installation.
 
-The database backups and restores are run using MySQL's "mysqldump":http://dev.mysql.com/doc/mysql/en/mysqldump.html command.
+The database backups and restores are run using MySQL's "mysqldump":https://dev.mysql.com/doc/mysql/en/mysqldump.html command.
 
 On this panel you are able to:
 
@@ -779,35 +788,32 @@ On this panel you are able to:
 * Download a backup file
 * Delete old backups
 
-h2(#backup-preferences). Backup Preferences
+h3(#backup-preferences). Backup preferences
 
-You have the ability to set several preferences related to your database backups. You can set these options on the backup panel. The options include:
+Set several preferences related to your database backups. You can set these options on the Database backup panel. The options are:
 
-* *Lock Tables* - Your host may or may not support this option.For example, by default, Textdrive doesn't allow table locking.If your backup fails, try setting this to “No”.
+* *Lock Tables* - Your host may or may not support this option. If your backup fails, try setting this to “No”.
 * *Debug Mode* - Turning debugging on will echo the command being run to the screen.
-* *Backup Path* - Set the directory that your backups will be saved to.
-* *Mysqldump Path* - It's likely that the default will work for you.If not, enter the full path the the executable.
-* *Mysql Path* - It's likely that the default will work for you.If not, enter the full path the the executable.
+* *Backup Path* - Set the directory that your backups will be saved to. Defaults to your Textpattern temp directory.
+* *Mysqldump Path* - It's likely that the default will work for you. If not, enter the full path to the executable.
+* *Mysql Path* - It's likely that the default will work for you. If not, enter the full path to the executable.
 
-h2(#database-manager). Database Manager
+h2(#database-manager). Database manager
 
-The *DB Manager panel* displays information about your MySQL database and all of its tables. A detailed list includes the name of the table, number of rows and file space usage.
+The _Database manager_ panel displays information about your MySQL database and all of its tables. A detailed list includes the name of the table, number of rows and file space usage.
 
-You will also be alerted of any overhead or errors that need to be repaired.Tables can be repaired, dropped or backed up from this listing.
+You will also be alerted of any overhead or errors that need to be repaired. Tables can be repaired, optimized, dropped or backed up from this listing.
 
-* Clicking on the name of the table will run a @select * FROM [table name]@ SQL statement and take you to the *Run SQL panel* to display the results.
-* Repair a single table in the listing by clicking the Repair link.
-* Repair all tables in the listing by clicking the Repair All link.
-* Backup a single table in the listing by clicking the Backup link.
-* Drop a single table in the listing by clicking the Drop link.
+* Clicking on the name of the table will run a @select * FROM [table name]@ SQL statement and take you to the _Run SQL_ panel to display the results.
+* Repair a single (MyISAM) table by clicking its corresponding _Repair_ link.
+* Repair all (MyISAM) tables by clicking the _Repair all_ link at the bottom of the table.
+* Optimize a single table by clicking its corresponding _Optimize_ link.
+* Backup a single table by clicking its corresponding _Backup_ link.
+* Drop a single table by clicking its corresponding _Drop_ link.
 
-h2(#run-sql-window). Run SQL Window
+h2(#run-sql-window). Run SQL
 
-The *Run SQL tab* allows for free form entry and execution of SQL statements. The SQL window accepts
-
-SELECT, INSERT, UPDATE, CREATE, REPLACE, TRUNCATE, and DELETE statements. If a SELECT statement is run, the results will be displayed below the SQL window in a table.
-
-The table markup allows you to add your own styles for creating a "CSS Scrollable Table":http://www.agavegroup.com/?p=31.
+The _Run SQL_ panel allows free form entry and execution of SQL statements. The SQL window accepts SELECT, INSERT, UPDATE, CREATE, REPLACE, TRUNCATE, and DELETE statements. If a SELECT statement is run, the results will be displayed below the SQL command in a table.
 
 h2(#major-ransom-contributors). Major Ransom Contributors
 
