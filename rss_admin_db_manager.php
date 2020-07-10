@@ -272,8 +272,7 @@ class rss_admin_db_manager
                 $$key = get_pref($key, $in, true);
             }
 
-            // Todo: i18n.
-            pagetop(gTxt('rss_db_bak'), "Preferences saved");
+            pagetop(gTxt('rss_db_bak'), gTxt('preferences_saved'));
 
         } elseif (gps("bk")) {
             $bk_table = (gps("bk_table")) ? " --tables " . gps("bk_table") . " " : "";
