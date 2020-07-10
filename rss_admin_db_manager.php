@@ -91,7 +91,6 @@ rss_db_table_repair => Repair
 rss_db_table_repair_all => Repair all
 rss_db_table_repaired => Repaired {table}
 rss_db_table_repaired_all => Repaired all tables
-
 #@rss_db_bk
 rss_db_backup_count => Backup file(s): {count}
 rss_db_backup_create => Create a new backup of the {db} database
@@ -101,11 +100,11 @@ rss_db_backup_failed => Backup failed: folder is not writable
 rss_db_backup_name => Backup file name
 rss_db_backup_none => No database backups
 rss_db_backup_ok => Backed up: {db} to "{filename}"
-rss_db_backup_path => Backup Path:
+rss_db_backup_path => Backup path:
 rss_db_backup_previous => Previous backup files
 rss_db_backup_restore => Restore
 rss_db_backup_size => Backup file size
-rss_db_debug_mode => Debug Mode:
+rss_db_debug_mode => Debug mode:
 rss_db_delete_error => Unable to delete: "{filename}"
 rss_db_delete_ok => Deleted: "{filename}"
 rss_db_gzip_file => gzipped file
