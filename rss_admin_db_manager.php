@@ -279,12 +279,12 @@ class rss_admin_db_manager
             $tabpath = (gps("bk_table")) ? "-" . gps("bk_table") : "";
             $gzip = gps("gzip");
             $filename = time() . '-' . $DB->db . $tabpath;
-            $backup_path = $rss_dbbk_path . '/' . $filename . '.sql';
+            $backup_path = $rss_dbbk_path . '/' . $filename . '.sql' . ($gzip ? '.gz' : '');
             $lock = ($rss_dbbk_lock) ? "" : " --skip-lock-tables --skip-add-locks ";
             $nolog = ($rss_dbbk_txplog) ? "" : " --ignore-table=" . $DB->db . ".txp_log ";
             $nolog = (isset($bk_table) && gps("bk_table") == "txp_log") ? "" : $nolog;
 
-            $backup_cmd = $rss_dbbk_dump . $mysql_hup . ' -Q --add-drop-table ' . $lock . $nolog . $DB->db . $bk_table . ($gzip ? ' | gzip' : '') . ' > ' . $backup_path . ($gzip ? '.gz' : '');
+            $backup_cmd = $rss_dbbk_dump . $mysql_hup . ' -Q --add-drop-table ' . $lock . $nolog . $DB->db . $bk_table . ($gzip ? ' | gzip' : '') . ' > ' . $backup_path;
 
             $bkdebug = ($rss_dbbk_debug) ? $backup_cmd : '';
             $error = "";
