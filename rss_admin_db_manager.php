@@ -550,7 +550,11 @@ class rss_admin_db_manager
             $q = "SHOW KEYS FROM `" . doSlash($Name) . "`";
             safe_query($q);
             $mysqlErrno = mysqli_errno($DB->link);
-            $alltabs[] = $sani_name;
+
+            if ($Engine === 'MyISAM') {
+                $alltabs[] = $sani_name;
+            }
+
             $color = ($mysqlErrno != 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
             $color2 = ($Data_free > 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
             $no++;
@@ -568,7 +572,7 @@ class rss_admin_db_manager
                 td($this->prettyFileSize($Data_length + $Index_length)) .
                 tda($this->prettyFileSize($Data_free), $color2) .
                 tda(" " . $mysqlErrno, $color) .
-                td(href(gTxt('rss_db_table_repair'), "index.php?event=rss_db_man&amp;rep_table=" . $sani_name) .n.
+                td(($Engine === 'MyISAM' ? href(gTxt('rss_db_table_repair'), "index.php?event=rss_db_man&amp;rep_table=" . $sani_name) .n : '').
                     href(gTxt('rss_db_table_backup'), "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $sani_name) .n.
                     href(gTxt('rss_db_table_optimize'), "index.php?event=rss_db_man&amp;opt_table=" . $sani_name) .n.
                     '<a href="index.php?event=rss_db_man&amp;drop_table=' . $sani_name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">' . gTxt('rss_db_table_drop') . '</a>'));
