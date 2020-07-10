@@ -8,6 +8,7 @@ h2. 4.6.0 - 2020-07-10
 * Use Textpacks instead of hard-coded strings.
 * Reintroduce Optimize Table feature.
 * Only MyISAM tables can be repaired.
+* Menu strings render correctly even if plugin loaded from cache.
 
 h2. 4.5.1 - 2020-01-11
 
