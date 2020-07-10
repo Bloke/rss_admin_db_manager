@@ -60,8 +60,31 @@ $plugin['textpack'] = <<< EOT
 rss_db_bk => Database backup
 rss_db_man => Database manager
 rss_db_run => Run SQL
+rss_db_row_number => No.
 #@rss_sql_run
 #@rss_db_man
+rss_db_head_table => Table
+rss_db_head_records => Records
+rss_db_head_use_data => Data usage
+rss_db_head_use_index => Index usage
+rss_db_head_use_total => Total usage
+rss_db_head_use_overhead => Overhead
+rss_db_head_error_number => Error
+rss_db_head_actions => Actions
+rss_db_mysql_host => Database host:
+rss_db_mysql_name => Database name:
+rss_db_mysql_user => Database user:
+rss_db_mysql_version => Database version:
+rss_db_table_backup => Backup
+rss_db_table_drop => Drop
+rss_db_table_dropped => Dropped {table}
+rss_db_table_optimize => Optimize
+rss_db_table_optimized => Optimized {table}
+rss_db_table_repair => Repair
+rss_db_table_repair_all => Repair all
+rss_db_table_repaired => Repaired {table}
+rss_db_table_repaired_all => Repaired all tables
+
 #@rss_db_bk
 rss_db_backup_count => Backup file(s): {count}
 rss_db_backup_create => Create a new backup of the {db} database
@@ -70,7 +93,6 @@ rss_db_backup_error => Backup failed. Error: {error}
 rss_db_backup_failed => Backup failed: folder is not writable
 rss_db_backup_name => Backup file name
 rss_db_backup_none => No database backups
-rss_db_backup_number => No.
 rss_db_backup_ok => Backed up: {db} to "{filename}"
 rss_db_backup_path => Backup Path:
 rss_db_backup_previous => Previous backup files
@@ -256,7 +278,6 @@ class rss_admin_db_manager
             $filename = time() . '-' . $DB->db . $tabpath;
             $backup_path = $rss_dbbk_path . '/' . $filename . '.sql';
             $lock = ($rss_dbbk_lock) ? "" : " --skip-lock-tables --skip-add-locks ";
-//            echo $txplogps;
             $nolog = ($rss_dbbk_txplog) ? "" : " --ignore-table=" . $DB->db . ".txp_log ";
             $nolog = (isset($bk_table) && gps("bk_table") == "txp_log") ? "" : $nolog;
 
@@ -362,7 +383,8 @@ class rss_admin_db_manager
             echo '<p align="center">' . $bkdebug . '</p>';
         }
 
-        echo startTable('txp-list') .
+        echo tag_start('div', array('class' => 'txp-listtables')) .
+            startTable('txp-list') .
             form(
                 tr(
                     tda(gTxt('rss_db_lock_tables'), ' style="text-align:right;vertical-align:middle"') .
@@ -387,7 +409,7 @@ class rss_admin_db_manager
                     tda(text_input("rss_dbbk_mysql", $rss_dbbk_mysql, '50'), ' colspan="15"')
                 )
             ) .
-            endTable() .
+            endTable() . tag_end('div').
             tag_start('div', array('class' => 'txp-listtables')) .
             startTable("txp-list", '', 'txp-list') .
             tr(
@@ -399,7 +421,7 @@ class rss_admin_db_manager
                 tdcs(hed(gTxt('rss_db_backup_previous'), 1), 7)
             ) .
             tr(
-                hcell(gTxt('rss_db_backup_number')) .
+                hcell(gTxt('rss_db_row_number')) .
                 hcell(gTxt('rss_db_backup_name')) .
                 hcell(gTxt('rss_db_backup_date')) .
                 hcell(gTxt('rss_db_backup_size')) .
@@ -461,88 +483,111 @@ class rss_admin_db_manager
         global $DB;
 
         if (gps("opt_table")) {
-            $query = "OPTIMIZE TABLE " . gps("opt_table");
+            $query = "OPTIMIZE TABLE " . doSlash(gps("opt_table"));
             safe_query($query);
-            pagetop(gTxt('rss_db_man'), "Optimzed: " . gps("opt_table"));
+            $message = gTxt('rss_db_table_optimized', array('{table}' => txpspecialchars(gps("opt_table"))));
         } elseif (gps("rep_table")) {
-            $query = "REPAIR TABLE " . gps("rep_table");
+            $query = "REPAIR TABLE " . doSlash(gps("rep_table"));
             safe_query($query);
-            pagetop(gTxt('rss_db_man'), "Repaired: " . gps("rep_table"));
+            $message = gTxt('rss_db_table_repaired', array('{table}' => txpspecialchars(gps("rep_table"))));
         } elseif (gps("rep_all")) {
-            $query = "REPAIR TABLE " . gps("rep_all");
+            $query = "REPAIR TABLE " . doSlash(gps("rep_all"));
             safe_query($query);
-            pagetop(gTxt('rss_db_man'), "Repaired All Tables");
+            $message = gTxt('rss_db_table_repaired_all');
         } elseif (gps("drop_table")) {
-            $query = "DROP TABLE " . gps("drop_table");
+            $query = "DROP TABLE " . doSlash(gps("drop_table"));
             safe_query($query);
-            pagetop(gTxt('rss_db_man'), "Dropped: " . gps("drop_table"));
+            $message = gTxt('rss_db_table_dropped', array('{table}' => txpspecialchars(gps("drop_table"))));
         } else {
-            pagetop(gTxt('rss_db_man'));
+            $message = '';
         }
 
+        pagetop(gTxt('rss_db_man'), $message);
         $sqlversion = getRow("SELECT VERSION() AS version");
         $headatts = ' style="color:#0069D1;padding:0 10px 0 5px;"';
 
-        echo startTable('dbinfo') .
+        echo tag_start('div', array('class' => 'txp-listtables')) .
+            startTable('dbinfo') .
             tr(
-                hcell("Database Host:") .
+                hcell(gTxt('rss_db_mysql_host')) .
                 tda($DB->host, $headatts) .
-                hcell("Database Name:") .
+                hcell(gTxt('rss_db_mysql_name')) .
                 tda($DB->db, $headatts) .
-                hcell("Database User:") .
+                hcell(gTxt('rss_db_mysql_user')) .
                 tda($DB->user, $headatts) .
-                hcell("Database Version:") .
+                hcell(gTxt('rss_db_mysql_version')) .
                 tda("MySQL v" . $sqlversion['version'], $headatts)
             ) .
-            endTable() .
+            endTable() . tag_end('div') .
             br;
 
-        echo startTable('list', '', 'txp-list') .
+        echo tag_start('div', array('class' => 'txp-listtables')) .
+            startTable('list', '', 'txp-list') .
             tr(
-                hcell("No.") .
-                hcell("Tables") .
-                hcell("Records") .
-                hcell("Data Usage") .
-                hcell("Index Usage") .
-                hcell("Total Usage") .
-                hcell("Overhead") .
-                hcell("ErrNo") .
-                hcell("Repair") .
-                hcell("Backup") .
-                hcell("Drop")
+                hcell(gTxt('rss_db_row_number')) .
+                hcell(gTxt('rss_db_head_table')) .
+                hcell(gTxt('rss_db_head_records')) .
+                hcell(gTxt('rss_db_head_use_data')) .
+                hcell(gTxt('rss_db_head_use_index')) .
+                hcell(gTxt('rss_db_head_use_total')) .
+                hcell(gTxt('rss_db_head_use_overhead')) .
+                hcell(gTxt('rss_db_head_error_number')) .
+                hcell(gTxt('rss_db_head_actions'))
             );
 
-        if (version_compare($sqlversion['version'], '3.23', '>=')) {
-            $no = 0;
-            $row_usage = 0;
-            $data_usage = 0;
-            $index_usage = 0;
-            $overhead_usage = 0;
-            $alltabs = array();
-            $tablesstatus = getRows("SHOW TABLE STATUS");
+        $no = 0;
+        $row_usage = 0;
+        $data_usage = 0;
+        $index_usage = 0;
+        $overhead_usage = 0;
+        $alltabs = array();
+        $tablesstatus = getRows("SHOW TABLE STATUS");
 
-            foreach ($tablesstatus as $tablestatus) {
-                extract($tablestatus);
-                $q = "SHOW KEYS FROM `" . $Name . "`";
-                safe_query($q);
-                $mysqlErrno = mysqli_errno($DB->link);
-                $alltabs[] = $Name;
-                $color = ($mysqlErrno != 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
-                $color2 = ($Data_free > 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
-                $no++;
-                $row_usage+= $Rows;
-                $data_usage+= $Data_length;
-                $index_usage+= $Index_length;
-                $overhead_usage+= $Data_free;
-                echo tr(td($no) . td(href($Name, "index.php?event=rss_sql_run&amp;tn=" . $Name)) . td(" " . $Rows) . td($this->prettyFileSize($Data_length)) . td($this->prettyFileSize($Index_length)) . td($this->prettyFileSize($Data_length + $Index_length)) . tda($this->prettyFileSize($Data_free) , $color2) . tda(" " . $mysqlErrno, $color) . td(href("Repair", "index.php?event=rss_db_man&amp;rep_table=" . $Name)) . td(href("Backup", "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $Name) . '<td><a href="index.php?event=rss_db_man&amp;drop_table=' . $Name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">Drop</a></td>'));
-            }
+        foreach ($tablesstatus as $tablestatus) {
+            extract($tablestatus);
+            $sani_name = txpspecialchars($Name);
 
-            echo tr(hcell("Total") . hcell($no . " Tables") . hcell(number_format($row_usage)) . hcell($this->prettyFileSize($data_usage)) . hcell($this->prettyFileSize($index_usage)) . hcell($this->prettyFileSize($data_usage + $index_usage)) . hcell($this->prettyFileSize($overhead_usage)) . hcell() . tda(href(strong("Repair All") , "index.php?event=rss_db_man&amp;rep_all=" . implode(",", $alltabs)) , ' style="text-align:center;" colspan="3"'));
-        } else {
-            echo tr(tda("Could Not Show Table Status Because Your MYSQL Version Is Lower Than 3.23.", ' style="text-align:center;" colspan=14"'));
+            $q = "SHOW KEYS FROM `" . doSlash($Name) . "`";
+            safe_query($q);
+            $mysqlErrno = mysqli_errno($DB->link);
+            $alltabs[] = $sani_name;
+            $color = ($mysqlErrno != 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
+            $color2 = ($Data_free > 0) ? ' style="color:#D10000;"' : ' style="color:#4B9F00;"';
+            $no++;
+            $row_usage+= $Rows;
+            $data_usage+= $Data_length;
+            $index_usage+= $Index_length;
+            $overhead_usage+= $Data_free;
+
+            echo tr(
+                td($no) .
+                td(href($sani_name, "index.php?event=rss_sql_run&amp;tn=" . $sani_name)) .
+                td(" " . $Rows) .
+                td($this->prettyFileSize($Data_length)) .
+                td($this->prettyFileSize($Index_length)) .
+                td($this->prettyFileSize($Data_length + $Index_length)) .
+                tda($this->prettyFileSize($Data_free), $color2) .
+                tda(" " . $mysqlErrno, $color) .
+                td(href(gTxt('rss_db_table_repair'), "index.php?event=rss_db_man&amp;rep_table=" . $sani_name) .n.
+                    href(gTxt('rss_db_table_backup'), "index.php?event=rss_db_bk&amp;bk=1&amp;bk_table=" . $sani_name) .n.
+                    href(gTxt('rss_db_table_optimize'), "index.php?event=rss_db_man&amp;opt_table=" . $sani_name) .n.
+                    '<a href="index.php?event=rss_db_man&amp;drop_table=' . $sani_name . '"onclick="return verify(\'' . gTxt('are_you_sure') . '\')">' . gTxt('rss_db_table_drop') . '</a>'));
         }
 
-        echo tr(tda(href("Run SQL", "index.php?event=rss_sql_run") , ' style="text-align:center;" colspan="14"')) . endTable();
+        echo tr(
+            hcell("Total") .
+            hcell($no . " Tables") .
+            hcell(number_format($row_usage)) .
+            hcell($this->prettyFileSize($data_usage)) .
+            hcell($this->prettyFileSize($index_usage)) .
+            hcell($this->prettyFileSize($data_usage + $index_usage)) .
+            hcell($this->prettyFileSize($overhead_usage)) .
+            hcell() .
+            tda(href(strong(gTxt('rss_db_table_repair_all')), "index.php?event=rss_db_man&amp;rep_all=" . implode(",", $alltabs)) , ' style="text-align:center;"'));
+
+        echo tr(tda(href(gTxt('rss_db_run'), "index.php?event=rss_sql_run") , ' style="text-align:center;" colspan="9"')) .
+            endTable() .
+            tag_end('div');
     }
 
     /**
