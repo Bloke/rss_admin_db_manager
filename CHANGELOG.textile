@@ -1,0 +1,29 @@
+h1. Changelog
+
+h2. 4.6.0 - 2020-07-10
+
+* For Textpattern 4.8+
+* Complete overhaul of internal codebase. Use a class for reduced global footprint and reduce global variable usage.
+* Use Txp's tempdir as default backup path. System temp dir otherwise.
+* Use Textpacks instead of hard-coded strings.
+* Reintroduce Optimize Table feature.
+* Only MyISAM tables can be repaired.
+
+h2. 4.5.1 - 2020-01-11
+
+* Better Dark Mode support.
+
+h2. 4.5.0 - 2018-11-28
+
+* For Textpattern 4.7+
+* Fixed prefs_id errors.
+* Plugin is now "admin only" type 3.
+* Refactor backup page to use DirectoryIterator and to sort backups most recent first.
+* Begin work on PSR2 compliance.
+
+h2. 4.4.0 - 2017-01-30
+
+* Forked
+* Privs addition for Txp 4.3.0+.
+* Version comparison for MariaDB / Percona.
+* Use mysqli_* calls.
