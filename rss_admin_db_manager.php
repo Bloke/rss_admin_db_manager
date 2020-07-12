@@ -17,7 +17,7 @@ $plugin['name'] = 'rss_admin_db_manager';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '4.6.0';
+$plugin['version'] = '4.6.1';
 $plugin['author'] = 'Rob Sable / Stef Dawson';
 $plugin['author_uri'] = 'https://stefdawson.com/';
 $plugin['description'] = 'Database management system for Textpattern';
@@ -188,20 +188,11 @@ class rss_admin_db_manager
         add_privs('rss_sql_run', $this->privs);
         add_privs('rss_db_bak', $this->privs);
 
+        register_tab('extensions', 'rss_db_man', gTxt('rss_db_man'));
+        register_tab('extensions', 'rss_sql_run', gTxt('rss_db_run'));
+        register_tab('extensions', 'rss_db_bak', gTxt('rss_db_bak'));
+
         register_callback(array($this, 'welcome'), 'plugin_lifecycle.'.$this->event);
-
-        register_callback(function() {
-            register_tab('extensions', 'rss_db_man', gTxt('rss_db_man'));
-        }, 'admin_side', 'head_end');
-
-        register_callback(function() {
-            register_tab('extensions', 'rss_sql_run', gTxt('rss_db_run'));
-        }, 'admin_side', 'head_end');
-
-        register_callback(function() {
-            register_tab('extensions', 'rss_db_bak', gTxt('rss_db_bak'));
-        }, 'admin_side', 'head_end');
-
         register_callback(array($this, 'db_man'), "rss_db_man");
         register_callback(array($this, 'db_sql'), "rss_sql_run");
         register_callback(array($this, 'db_bak'), "rss_db_bak");
