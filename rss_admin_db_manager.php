@@ -772,6 +772,7 @@ class rss_admin_db_manager
                         'event'      => $this->hook,
                         'step'       => 'rss_db_bak',
                         '_txp_token' => form_token(),
+                        'bk'         => 1,
                         'bk_table'   => $escaped_name,
                     )).n.
                     href(gTxt('rss_db_table_optimize'), array(
