@@ -91,7 +91,7 @@ rss_db_table_repair_all => Repair all
 rss_db_table_repaired => Repaired {table}
 rss_db_table_repaired_all => Repaired all tables
 rss_db_backup_count => Backup file(s): {count}
-rss_db_backup_create => Create a new backup of the {db} database
+rss_db_backup_create => Create a new backup of the {db} database:
 rss_db_backup_date => Backup date/time
 rss_db_backup_error => Backup failed. Error: {error}
 rss_db_backup_failed => Backup failed: folder is not writable
@@ -101,6 +101,7 @@ rss_db_backup_ok => Backed up: {db} to "{filename}"
 rss_db_backup_path => Backup path:
 rss_db_backup_previous => Previous backup files
 rss_db_backup_restore => Restore
+rss_db_backup_settings => Backup settings
 rss_db_backup_size => Backup file size
 rss_db_debug_mode => Debug mode:
 rss_db_delete_error => Unable to delete: "{filename}"
@@ -349,15 +350,15 @@ class rss_admin_db_manager
             }
 
             if (!is_writable($rss_dbbk_path)) {
-                $message = array(gTxt('rss_db_backup_failed'), E_WARNING);
+                $message = array(gTxt('rss_db_backup_failed'), E_ERROR);
             } elseif ($error) {
                 unlink($backup_path);
-                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_WARNING);
+                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_ERROR);
             } elseif (!is_file($backup_path)) {
-                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_WARNING);
+                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_ERROR);
             } elseif (filesize($backup_path) == 0) {
                 unlink($backup_path);
-                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_WARNING);
+                $message = array(gTxt('rss_db_backup_error', array('{error}' => $error)), E_ERROR);
             } else {
                 $message = gTxt('rss_db_backup_ok', array('{db}' => $DB->db, '{filename}' => $filename));
             }
@@ -430,19 +431,13 @@ class rss_admin_db_manager
 
         $gzp = (IS_WIN)
                 ? ''
-                : " | " . href(gTxt('rss_db_gzip_file'), array(
+                : ' | ' . href(gTxt('rss_db_gzip_file'), array(
                     'event'      => $this->hook,
                     'step'       => 'rss_db_bak',
                     '_txp_token' => form_token(),
                     'bk'         => $DB->db,
                     'gzip'       => 1,
-                ));
-        $styl = array(
-            'style' => 'text-align:left; vertical-align:middle',
-        );
-        $styr = array(
-            'style' => 'text-align:right; vertical-align:middle',
-        );
+                ), array('class' => 'txp-button'));
 
         echo n.'<div class="txp-layout">'.
             n.tag(
@@ -462,49 +457,35 @@ class rss_admin_db_manager
             echo '<p align="center">' . $bkdebug . '</p>';
         }
 
-        echo tag_start('div', array('class' => 'txp-listtables')) .
-            startTable('txp-list') .
-            form(
-                tr(
-                    tda(gTxt('rss_db_lock_tables'), $styr).
-                    tda(yesnoRadio('rss_dbbk_lock', $rss_dbbk_lock), $styr).
-                    tda(gTxt('rss_db_include_log') , $styr).
-                    tda(yesnoRadio('rss_dbbk_txplog', $rss_dbbk_txplog) , $styl).
-                    tda(gTxt('rss_db_debug_mode'), $styr).
-                    tda(yesnoRadio('rss_dbbk_debug', $rss_dbbk_debug), $styl).
-                    tda(fInput('submit', 'save', gTxt('save') , 'publish')).
-                    eInput($this->hook).
-                    sInput('rss_db_bak'), array('colspan' => 2)
-                ) .
-                tr(
-                    tda(gTxt('rss_db_backup_path'), $styr) .
-                    tda(fInput('text', 'rss_dbbk_path', $rss_dbbk_path, '', '', '', '50'), ' colspan="15"')
-                ) .
-                tr(
-                    tda(gTxt('rss_db_mysqldump_path'), $styr) .
-                    tda(fInput('text', 'rss_dbbk_dump', $rss_dbbk_dump, '', '', '', '50'), ' colspan="15"')
-                ) .
-                tr(
-                    tda(gTxt('rss_db_mysql_path'), $styr) .
-                    tda(fInput('text', 'rss_dbbk_mysql', $rss_dbbk_mysql, '', '', '', '50'), ' colspan="15"')
-                )
-            ).
-            endTable() . tag_end('div').
-            tag_start('div', array('class' => 'txp-listtables')) .
-            startTable('txp-list', '', 'txp-list') .
-            tr(
-                tda(hed(gTxt('rss_db_backup_create', array('{db}' => $DB->db)) .
-                    br .
+        $cpnl = form(
+            graf(
+                inputLabel('rss_dbbk_lock', yesnoRadio('rss_dbbk_lock', $rss_dbbk_lock), 'rss_db_lock_tables').
+                inputLabel('rss_dbbk_txplog', yesnoRadio('rss_dbbk_txplog', $rss_dbbk_txplog), 'rss_db_include_log').
+                inputLabel('rss_dbbk_debug', yesnoRadio('rss_dbbk_debug', $rss_dbbk_debug), 'rss_db_debug_mode').
+                eInput($this->hook).
+                sInput('rss_db_bak'), array('colspan' => 2)
+            ) .
+            inputLabel('rss_dbbk_path', fInput('text', 'rss_dbbk_path', $rss_dbbk_path, '', '', '', '50'), 'rss_db_backup_path').
+            inputLabel('rss_dbbk_dump', fInput('text', 'rss_dbbk_dump', $rss_dbbk_dump, '', '', '', '50'), 'rss_db_mysqldump_path').
+            inputLabel('rss_dbbk_mysql', fInput('text', 'rss_dbbk_mysql', $rss_dbbk_mysql, '', '', '', '50'), 'rss_db_mysql_path').
+            graf(fInput('submit', 'save', gTxt('save') , 'publish'), array('class' => 'txp-edit-actions'))
+        , '', '', 'post', 'txp-edit', '', 'rss_dbbk_settings_block');
+
+        echo wrapRegion('rss_dbbk_settings', $cpnl, 'rss_dbbk_settings_block', 'rss_db_backup_settings', 'rss_db_backup_settings_visible');
+
+        echo graf(
+                gTxt('rss_db_backup_create', array('{db}' => $DB->db)).n.
                     href(gTxt('rss_db_sql_file'), array(
                         'event'      => $this->hook,
                         'step'       => 'rss_db_bak',
                         '_txp_token' => form_token(),
                         'bk'         => $DB->db,
-                    )) . $gzp, 3), ' colspan="7" style="text-align:center;"')
-            ) .
-            tr(
-                tdcs(hed(gTxt('rss_db_backup_previous'), 1), 7)
-            ) .
+                    ), array('class' => 'txp-button')) . $gzp
+            ).
+            hed(gTxt('rss_db_backup_previous'), 2);
+
+        echo tag_start('div', array('class' => 'txp-listtables')) .
+            startTable('txp-list', '', 'txp-list') .
             tr(
                 hcell(gTxt('rss_db_row_number')) .
                 hcell(gTxt('rss_db_backup_name')) .
@@ -813,22 +794,7 @@ class rss_admin_db_manager
                     : '')
             ));
 
-        echo tr(tda(
-            href(gTxt('rss_db_sql'), array(
-                'event'      => $this->hook,
-                'step'       => 'rss_db_sql',
-                '_txp_token' => form_token(),
-            )).
-            ' | '.
-            href(gTxt('rss_db_table_backup'), array(
-                'event'      => $this->hook,
-                'step'       => 'rss_db_bak',
-                '_txp_token' => form_token(),
-            )), array(
-                'style'   => 'text-align:center;',
-                'colspan' => 10,
-            ))).
-            endTable() .
+        echo endTable() .
             tag_end('div').tag_end('div');
         echo end_page();
         exit;
