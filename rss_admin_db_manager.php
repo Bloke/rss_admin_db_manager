@@ -870,7 +870,7 @@ class rss_admin_db_manager
                                 $i++;
                             }
 
-                            $rsd[] = '<div class="scrollWrapper">' . startTable('list', '', 'txp-list scrollable') . '<thead>' . tr($headers) . '</thead><tbody>';
+                            $rsd[] = startTable('list', '', 'txp-list scrollable') . '<thead>' . tr($headers) . '</thead><tbody>';
 
                             while ($a = mysqli_fetch_assoc($run_query)) {
                                 $out[] = $a;
@@ -888,7 +888,7 @@ class rss_admin_db_manager
                                 $rsd[] = tr($data);
                             }
 
-                            $rsd[] = '</tbody>' . endTable() . '</div>' . br;
+                            $rsd[] = '</tbody>' . endTable() . br;
                             $out = array();
                         } else {
                             $text .= graf(mysqli_error($DB->link) , array('class' => 'error'));
@@ -908,42 +908,44 @@ class rss_admin_db_manager
 
         echo n.'<div class="txp-layout">'.
             n.tag(
-                hed(gTxt('rss_db_sql'), 1, array('class' => 'txp-heading')),
+                hed(gTxt('rss_db_sql'), 1, array('class' => 'txp-heading')).
+                form(
+                    eInput($this->hook).
+                    $this->levels($this->hook, false, '', $diag_levels)
+                ),
                 'div', array('class' => 'txp-layout-1col')
             ).
             n.tag_start('div', array(
                 'class' => 'txp-layout-1col',
                 'id'    => $event.'_container',
             )).
-            form(
-                eInput($this->hook).
-                $this->levels($this->hook, false, '', $diag_levels)
-            );
+            n.tag_start('div', array(
+                'class' => 'txp-layout-cell-row txp-list-head',
+            )).
+            n.tag_start('div', array(
+                'class' => 'txp-control-panel',
+            ));
 
-        echo startTable('edit') .
-            tr(
-                td(
-                    form(
-                        graf(gTxt('rss_db_query_preamble1') . br . gTxt('rss_db_query_preamble2')) .
-                        graf(gTxt('rss_db_query_warning'), ' style="font-weight:bold;"') .
-                        text_area('sql_query', '200', '550', $sql_query2) .
-                        br.
-                        fInput('submit', 'run', gTxt('rss_db_query_run'), 'publish') . n.
-                        href(gTxt('rss_db_man'), array(
-                            'event'      => $this->hook,
-                            'step'       => 'rss_db_man',
-                            '_txp_token' => form_token(),
-                        )).
-                        eInput('diag').
-                        sInput('rss_db_sql')
-                        , '', ' verify(\'' . gTxt('are_you_sure') . '\')'
-                    )
-                )
-            ) .
-            tr(
-                td(graf($text . br . implode('', $rsd)))
-            ).
-            endTable().tag_end('div').tag_end('div');
+            echo form(
+                graf(gTxt('rss_db_query_preamble1') . br . gTxt('rss_db_query_preamble2')) .
+                graf(gTxt('rss_db_query_warning'), ' style="font-weight:bold;"') .
+                text_area('sql_query', '200', '550', $sql_query2) .
+                br.
+                fInput('submit', 'run', gTxt('rss_db_query_run'), 'publish') . n.
+                href(gTxt('rss_db_man'), array(
+                    'event'      => $this->hook,
+                    'step'       => 'rss_db_man',
+                    '_txp_token' => form_token(),
+                )).
+                eInput('diag').
+                sInput('rss_db_sql')
+                , '', ' verify(\'' . gTxt('are_you_sure') . '\')'
+            ).$text;
+
+            echo tag_end('div').tag_end('div').
+                tag_start('div', array('class' => 'txp-listtables')) .
+                implode('', $rsd).
+                tag_end('div').tag_end('div').tag_end('div');
         echo end_page();
         exit;
     }
