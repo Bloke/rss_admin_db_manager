@@ -520,7 +520,7 @@ class rss_admin_db_manager
             foreach ($database_files as $stamp => $filename) {
                 $no++;
                 $database_text = substr($filename, 0, 50);
-                $date_text = strftime("%A, %B %d, %Y [%H:%M:%S]", $stamp);
+                $date_text = date("l, F d, Y [H:i:s]", $stamp);
                 $size_text = filesize($rss_dbbk_path . '/' . $filename);
                 $totalsize += $size_text;
 
