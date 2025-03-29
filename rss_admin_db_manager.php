@@ -67,7 +67,8 @@ rss_db_query_success => {done}/{total} query(s) executed successfully
 rss_db_query_unsupported => - QUERY TYPE NOT SUPPORTED
 rss_db_query_warning => WARNING: All SQL run in this window will immediately and permanently change your database.
 rss_db_query_run => Run
-rss_db_head_qty="{qty} Tables"
+rss_db_head_qty => {qty} tables
+rss_db_head_total => Total
 rss_db_head_table => Table
 rss_db_head_fields => Fields
 rss_db_head_records => Records
@@ -668,25 +669,33 @@ class rss_admin_db_manager
 
         foreach ($tablesstatus as $tablestatus) {
             extract($tablestatus);
-            $escaped_name = txpspecialchars($Name);
+            $escaped_name = $unprefixed = txpspecialchars($Name);
             $safe_name = doSlash($Name);
-            isset($columns[$escaped_name]) or $columns[$escaped_name]['total'] = 0;
 
-            $q = "SHOW KEYS FROM ".safe_pfx($safe_name);
+            $q = "SHOW KEYS FROM ".$safe_name;
             safe_query($q);
             $mysqlErrno = mysqli_errno($DB->link);
 
             $color = ($mysqlErrno != 0) ? array('class' => 'error') : array('class' => 'success');
             $color2 = ($Data_free > 0) ? array('class' => 'error') : array('class' => 'success');
             $color3 = array('class' => 'success');
-            $pathToCheck = txpath.'/vendors/Textpattern/DB/Tables/'.$escaped_name.'.table';
+
+            $pos = strpos($escaped_name, PFX);
+
+            if ($pos !== false) {
+                $unprefixed = substr_replace($escaped_name, '', $pos, strlen(PFX));
+            }
+
+            isset($columns[$unprefixed]) or $columns[$unprefixed]['total'] = 0;
+
+            $pathToCheck = txpath.'/vendors/Textpattern/DB/Tables/'.$unprefixed.'.table';
 
             if (is_readable($pathToCheck)) {
                 $expectedDef = file($pathToCheck);
 
                 $q = "SELECT COLUMN_NAME AS Field, LOWER(DATA_TYPE) as Type, CHARACTER_MAXIMUM_LENGTH
                     FROM information_schema.columns
-                    WHERE table_schema = '".$DB->db."' AND table_name = '".safe_pfx($safe_name)."'";
+                    WHERE table_schema = '".$DB->db."' AND table_name = '$safe_name'";
 
                 $tableDef = array_column(getRows($q), 'Type', 'Field');
 
@@ -698,7 +707,7 @@ class rss_admin_db_manager
                         break;
                     }
 
-                    $columns[$escaped_name]['total']++;
+                    $columns[$unprefixed]['total']++;
 
                     // $parts[0] = field name, $parts[1] = type.
                     $parts = explode(' ', preg_replace(array('!\s+!', '!,!'), ' ', $row));
@@ -711,7 +720,7 @@ class rss_admin_db_manager
                         $tableDef[$parts[0]] === $parts[1];
 
                     if (!$field_ok) {
-                        $columns[$escaped_name]['error'][$parts[0]] = $parts[1];
+                        $columns[$unprefixed]['error'][$parts[0]] = $parts[1];
                         $color3 = array('class' => 'error');
                     }
                 }
@@ -719,7 +728,7 @@ class rss_admin_db_manager
 
             $tbl_num++;
             $row_usage+= $Rows;
-            $col_usage += (isset($columns[$escaped_name]) ? $columns[$escaped_name]['total'] : 0);
+            $col_usage += (isset($columns[$unprefixed]) ? $columns[$unprefixed]['total'] : 0);
             $data_usage+= $Data_length;
             $index_usage+= $Index_length;
             $overhead_usage+= $Data_free;
@@ -732,7 +741,7 @@ class rss_admin_db_manager
                         '_txp_token' => form_token(),
                         'tn'         => $escaped_name,
                     ))).
-                tda(($columns[$escaped_name]['total'] === 0 ? '-' : $columns[$escaped_name]['total']).(isset($columns[$escaped_name]['error']) ? ' / '.count($columns[$escaped_name]['error']).' ('.implode(', ', array_keys($columns[$escaped_name]['error'])).')' : ''), $color3).
+                tda(($columns[$unprefixed]['total'] === 0 ? '-' : $columns[$unprefixed]['total']).(isset($columns[$unprefixed]['error']) ? ' / '.count($columns[$unprefixed]['error']).' ('.implode(', ', array_keys($columns[$unprefixed]['error'])).')' : ''), $color3).
                 td($Rows) .
                 td($this->prettyFileSize($Data_length)) .
                 td($this->prettyFileSize($Index_length)) .
@@ -774,7 +783,7 @@ class rss_admin_db_manager
         }
 
         echo tr(
-            hcell(gTxt("total")) .
+            hcell(gTxt('rss_db_head_total')) .
             hcell(gTxt('rss_db_head_qty', array('{qty}' => $tbl_num))) .
             hcell(number_format($col_usage)) .
             hcell(number_format($row_usage)) .
