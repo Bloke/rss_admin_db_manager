@@ -335,8 +335,8 @@ class rss_admin_db_manager
             $filename = time() . '-' . $DB->db . $tabpath;
             $backup_path = $rss_dbbk_path . '/' . $filename . '.sql' . ($gzip ? '.gz' : '');
             $lock = $rss_dbbk_lock ? "" : " --skip-lock-tables --skip-add-locks ";
-            $nolog = $rss_dbbk_txplog ? "" : " --ignore-table=" . $DB->db . ".txp_log ";
-            $nolog = (isset($bk_table) && $escaped_name == "txp_log") ? "" : $nolog;
+            $nolog = $rss_dbbk_txplog ? "" : " --ignore-table=" . $DB->db . ".".safe_pfx('txp_log')." ";
+            $nolog = (isset($bk_table) && $escaped_name == safe_pfx('txp_log')) ? "" : $nolog;
 
             $backup_cmd = $rss_dbbk_dump . $mysql_hup . ' -Q --add-drop-table ' . $lock . $nolog . $DB->db . $bk_table . ($gzip ? ' | gzip' : '') . ' > ' . $backup_path;
 
@@ -585,13 +585,13 @@ class rss_admin_db_manager
         $message = '';
 
         if ($tbl = gps("opt_table")) {
-            if (in_array($tbl, $tablelist)) {
+            if (in_array(safe_pfx($tbl), $tablelist)) {
                 if (safe_optimize(doSlash($tbl))) {
                     $message = gTxt('rss_db_table_optimized', array('{table}' => txpspecialchars($tbl)));
                 }
             }
         } elseif ($tbl = gps("rep_table")) {
-            if (in_array($tbl, $tablelist)) {
+            if (in_array(safe_pfx($tbl), $tablelist)) {
                 if (safe_repair(doSlash($tbl))) {
                     $message = gTxt('rss_db_table_repaired', array('{table}' => txpspecialchars($tbl)));
                 }
@@ -603,7 +603,7 @@ class rss_admin_db_manager
                 }
             }
         } elseif ($tbl = gps("drop_table")) {
-            if (in_array($tbl, $tablelist)) {
+            if (in_array(safe_pfx($tbl), $tablelist)) {
                 if (safe_drop(doSlash($tbl))) {
                     $message = gTxt('rss_db_table_dropped', array('{table}' => txpspecialchars($tbl)));
                 }
@@ -755,7 +755,7 @@ class rss_admin_db_manager
                                 'event'      => $this->hook,
                                 'step'       => 'rss_db_man',
                                 '_txp_token' => form_token(),
-                                'rep_table'  => $escaped_name,
+                                'rep_table'  => $unprefixed,
                             )).n
                         : '').
                     href(gTxt('rss_db_table_backup'), array(
@@ -769,13 +769,13 @@ class rss_admin_db_manager
                         'event'      => $this->hook,
                         'step'       => 'rss_db_man',
                         '_txp_token' => form_token(),
-                        'opt_table'  => $escaped_name,
+                        'opt_table'  => $unprefixed,
                     )).n.
                     href(gTxt('rss_db_table_drop'), array(
                         'event'      => $this->hook,
                         'step'       => 'rss_db_man',
                         '_txp_token' => form_token(),
-                        'drop_table' => $escaped_name,
+                        'drop_table' => $unprefixed,
                     ), array(
                         'data-verify' => gTxt('are_you_sure'),
                     ))
